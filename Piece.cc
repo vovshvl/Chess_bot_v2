@@ -59,12 +59,7 @@ public:
     }
 
 private:
-    /**
-     * Generate pawn attack pattern from given square
-     * @param sq Source square
-     * @param is_white Pawn color
-     * @return Bitboard with attacked squares
-     */
+
     static Bitboard pawn_attacks(int sq, bool is_white) {
         Bitboard bb = 1ULL << sq;
         // White pawns attack diagonally upward, black pawns attack diagonally downward
@@ -73,11 +68,6 @@ private:
                    : ((bb >> 7) & ~FILE_A) | ((bb >> 9) & ~FILE_H);
     }
 
-    /**
-     * Generate knight attack pattern from given square
-     * @param sq Source square
-     * @return Bitboard with attacked squares
-     */
     static Bitboard knight_attacks(int sq) {
         Bitboard bb = 1ULL << sq;
         // Knight's eight possible moves in L-pattern
@@ -87,16 +77,10 @@ private:
                (((bb << 10) | (bb >> 6)) & ~(FILE_A | FILE_B));
     }
 
-    /**
-     * Generate bishop attack pattern from given square
-     * @param sq Source square
-     * @param occupied Current board occupancy
-     * @return Bitboard with attacked squares
-     */
     static Bitboard bishop_attacks(int sq, Bitboard occupied) {
         Bitboard attacks = EMPTY;
         int r = sq / 8, f = sq % 8;
-        // Generate attacks in all four diagonal directions
+
         for (int dr: {-1, 1}) {
             for (int df: {-1, 1}) {
                 int rank = r + dr, file = f + df;
@@ -112,12 +96,6 @@ private:
         return attacks;
     }
 
-    /**
-     * Generate rook attack pattern from given square
-     * @param sq Source square
-     * @param occupied Current board occupancy
-     * @return Bitboard with attacked squares
-     */
     static Bitboard rook_attacks(int sq, Bitboard occupied) {
         Bitboard attacks = EMPTY;
         int r = sq / 8, f = sq % 8;
@@ -141,17 +119,15 @@ private:
         return attacks;
     }
 
-    /**
-     * Generate king attack pattern from given square
-     * @param sq Source square
-     * @return Bitboard with attacked squares
-     */
     static Bitboard king_attacks(int sq) {
         Bitboard bb = 1ULL << sq;
-        // King's eight possible moves in all adjacent squares
+
         return ((bb << 1) & ~FILE_A) | ((bb >> 1) & ~FILE_H) |
                (bb << 8) | (bb >> 8) |
                ((bb << 7) & ~FILE_H) | ((bb << 9) & ~FILE_A) |
                ((bb >> 7) & ~FILE_A) | ((bb >> 9) & ~FILE_H);
+    }
+    static  Bitboard queen_attacks(int sq, Bitboard occupied) {
+        return bishop_attacks(sq, occupied) | rook_attacks(sq, occupied);
     }
 };
