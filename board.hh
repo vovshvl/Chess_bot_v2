@@ -1,0 +1,188 @@
+//
+// Created by Kirill on 8/1/2025.
+//
+
+#ifndef BOARD_HH
+#include <cstdint>
+#include <iostream>
+#define BOARD_HH
+
+class board {
+private:
+    // Битборды для каждого типа фигур каждого цвета
+    uint64_t white_pawn = 0;
+    uint64_t black_pawn = 0;
+    uint64_t white_knight = 0;
+    uint64_t black_knight = 0;
+    uint64_t white_bishop = 0;
+    uint64_t black_bishop = 0;
+    uint64_t white_rook = 0;
+    uint64_t black_rook = 0;
+    uint64_t white_queen = 0;
+    uint64_t black_queen = 0;
+    uint64_t white_king = 0;
+    uint64_t black_king = 0;
+    
+    // Совмещенные битборды
+    uint64_t white_pieces = 0;
+    uint64_t black_pieces = 0;
+    uint64_t all_pieces = 0;
+
+public:
+    void init_board() {
+        // Инициализация пешек
+        white_pawn = 0x000000000000FF00ULL;
+        black_pawn = 0x00FF000000000000ULL;
+        
+        // Инициализация ладей
+        white_rook = 0x0000000000000081ULL;
+        black_rook = 0x8100000000000000ULL;
+        
+        // Инициализация коней
+        white_knight = 0x0000000000000042ULL;
+        black_knight = 0x4200000000000000ULL;
+        
+        // Инициализация слонов
+        white_bishop = 0x0000000000000024ULL;
+        black_bishop = 0x2400000000000000ULL;
+        
+        // Инициализация ферзей
+        white_queen = 0x0000000000000008ULL;
+        black_queen = 0x0800000000000000ULL;
+        
+
+        white_king = 0x0000000000000010ULL;
+        black_king = 0x1000000000000000ULL;
+        
+        // Обновляем совмещенные битборды
+        update_combined_bitboards();
+    }
+    
+    void update_combined_bitboards() {
+        white_pieces = white_pawn | white_knight | white_bishop | 
+                      white_rook | white_queen | white_king;
+        black_pieces = black_pawn | black_knight | black_bishop | 
+                      black_rook | black_queen | black_king;
+        all_pieces = white_pieces | black_pieces;
+    }
+    
+    
+    bool is_square_occupied(int square) const {
+        return (all_pieces >> square) & 1ULL;
+    }
+    
+    bool is_white_piece(int square) const {
+        return (white_pieces >> square) & 1ULL;
+    }
+    
+    bool is_black_piece(int square) const {
+        return (black_pieces >> square) & 1ULL;
+    }
+    
+    
+    void set_piece(int square, char piece) {
+        uint64_t bit = 1ULL << square;
+        
+        // Сначала очищаем поле
+        clear_square(square);
+        
+        // Затем устанавливаем нужную фигуру
+        switch(piece) {
+            case 'P': white_pawn |= bit; break;
+            case 'p': black_pawn |= bit; break;
+            case 'N': white_knight |= bit; break;
+            case 'n': black_knight |= bit; break;
+            case 'B': white_bishop |= bit; break;
+            case 'b': black_bishop |= bit; break;
+            case 'R': white_rook |= bit; break;
+            case 'r': black_rook |= bit; break;
+            case 'Q': white_queen |= bit; break;
+            case 'q': black_queen |= bit; break;
+            case 'K': white_king |= bit; break;
+            case 'k': black_king |= bit; break;
+        }
+        
+        update_combined_bitboards();
+    }
+    
+    void clear_square(int square) {
+        uint64_t clear_bit = ~(1ULL << square);
+        white_pawn &= clear_bit;
+        black_pawn &= clear_bit;
+        white_knight &= clear_bit;
+        black_knight &= clear_bit;
+        white_bishop &= clear_bit;
+        black_bishop &= clear_bit;
+        white_rook &= clear_bit;
+        black_rook &= clear_bit;
+        white_queen &= clear_bit;
+        black_queen &= clear_bit;
+        white_king &= clear_bit;
+        black_king &= clear_bit;
+        
+        update_combined_bitboards();
+    }
+    
+    // Функция для получения символа фигуры на определенном поле
+    char get_piece_at_square(int square) const {
+        uint64_t bit = 1ULL << square;
+        
+        if (white_pawn & bit) return 'P';
+        if (black_pawn & bit) return 'p';
+        if (white_knight & bit) return 'K';
+        if (black_knight & bit) return 'k';
+        if (white_bishop & bit) return 'B';
+        if (black_bishop & bit) return 'b';
+        if (white_rook & bit) return 'R';
+        if (black_rook & bit) return 'r';
+        if (white_queen & bit) return 'Q';
+        if (black_queen & bit) return 'q';
+        if (white_king & bit) return 'K';
+        if (black_king & bit) return 'k';
+
+        return '.'; // пустое поле
+    }
+    
+    // Функция для печати доски
+    void print_board() const {
+        std::cout << "\n  +---+---+---+---+---+---+---+---+\n";
+        
+        // Печатаем доску с 8-й горизонтали (индекс 56-63) до 1-й (индекс 0-7)
+        for (int rank = 7; rank >= 0; rank--) {
+            std::cout << (rank + 1) << " |";
+            
+            for (int file = 0; file < 8; file++) {
+                int square = rank * 8 + file;
+                char piece = get_piece_at_square(square);
+                std::cout << " " << piece << " |";
+            }
+            
+            std::cout << "\n  +---+---+---+---+---+---+---+---+\n";
+        }
+        
+        std::cout << "    a   b   c   d   e   f   g   h\n\n";
+    }
+    
+    void remember_board();
+    void reset_board() {
+        // Очищаем все битборды
+        white_pawn = black_pawn = 0;
+        white_knight = black_knight = 0;
+        white_bishop = black_bishop = 0;
+        white_rook = black_rook = 0;
+        white_queen = black_queen = 0;
+        white_king = black_king = 0;
+        white_pieces = black_pieces = all_pieces = 0;
+        
+
+        init_board();
+    }
+
+    uint64_t get_white_pawns() const { return white_pawn; }
+    uint64_t get_black_pawns() const { return black_pawn; }
+    uint64_t get_white_pieces() const { return white_pieces; }
+    uint64_t get_black_pieces() const { return black_pieces; }
+    uint64_t get_all_pieces() const { return all_pieces; }
+};
+
+#endif //BOARD_HH
