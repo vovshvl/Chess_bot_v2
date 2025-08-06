@@ -6,10 +6,6 @@
 
 #include "board.hh"
 
-/**
- * Class representing a chess piece with efficient bitboard-based move generation
- * and attack detection capabilities.
- */
 class Piece {
 private:
     // Bitboard type for representing piece positions and attack patterns
@@ -23,7 +19,7 @@ private:
     bool has_moved = false; // Tracks if piece has moved (important for pawns and castling)
     int square; // Current square (0-63, a1=0, h8=63)
     int value; // Piece value (+/- for white/black)
-    bool is_white = value > 0; // Color determination based on value sign
+    bool is_white = value > 0;
 
     // Bitboards for current piece's attack and move patterns
     Bitboard attacks; // Squares this piece attacks
@@ -36,11 +32,6 @@ private:
     static constexpr Bitboard FILE_H = FILE_A << 7; // Rightmost file
 
 public:
-    /**
-     * Determines if the piece is under attack by any opponent pieces
-     * @param board Current game board state
-     * @return true if piece is attacked, false otherwise
-     */
     bool is_attacked(const Board &board) const {
         // Get opponent piece positions
         Bitboard opponent_pawns = board.get_piece_bitboard(is_white ? -1 : 1);

@@ -6,13 +6,13 @@
 
 class Move {
 private:
-    std::pair<int, int> from_square;
-    std::pair<int, int> to_square;
+    int from_square;
+    int to_square;
     std::optional<char> piece_captured;
     std::optional<char> promotion;
     bool castling_king;
     bool castling_queen;
-    std::optional<std::pair<int, int>> en_passant_captured_square;
+    std::optional<int> en_passant_captured_square;
     std::optional<bool> check;
     int move_score;
 
