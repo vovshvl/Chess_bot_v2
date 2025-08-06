@@ -23,7 +23,7 @@ public:
          std::optional<char> promotion = std::nullopt,
          bool castling_king = false,
          bool castling_queen = false,
-         std::optional<std::pair<int, int>> en_passant_captured_square = std::nullopt,
+         std::optional<int> en_passant_captured_square = std::nullopt,
          std::optional<bool> check = std::nullopt)
         : from_square(from_square),
           to_square(to_square),
