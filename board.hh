@@ -8,7 +8,7 @@
 #define BOARD_HH
 
 class board {
-private:
+public:
     // Битборды для каждого типа фигур каждого цвета
     uint64_t white_pawn = 0;
     uint64_t black_pawn = 0;
@@ -28,33 +28,27 @@ private:
     uint64_t black_pieces = 0;
     uint64_t all_pieces = 0;
 
-public:
+
     void init_board() {
-        // Инициализация пешек
         white_pawn = 0x000000000000FF00ULL;
         black_pawn = 0x00FF000000000000ULL;
-        
-        // Инициализация ладей
+
         white_rook = 0x0000000000000081ULL;
         black_rook = 0x8100000000000000ULL;
-        
-        // Инициализация коней
+
         white_knight = 0x0000000000000042ULL;
         black_knight = 0x4200000000000000ULL;
-        
-        // Инициализация слонов
+
         white_bishop = 0x0000000000000024ULL;
         black_bishop = 0x2400000000000000ULL;
-        
-        // Инициализация ферзей
+
         white_queen = 0x0000000000000008ULL;
         black_queen = 0x0800000000000000ULL;
         
 
         white_king = 0x0000000000000010ULL;
         black_king = 0x1000000000000000ULL;
-        
-        // Обновляем совмещенные битборды
+
         update_combined_bitboards();
     }
     
@@ -129,8 +123,8 @@ public:
         
         if (white_pawn & bit) return 'P';
         if (black_pawn & bit) return 'p';
-        if (white_knight & bit) return 'K';
-        if (black_knight & bit) return 'k';
+        if (white_knight & bit) return 'N';
+        if (black_knight & bit) return 'n';
         if (white_bishop & bit) return 'B';
         if (black_bishop & bit) return 'b';
         if (white_rook & bit) return 'R';
@@ -162,8 +156,6 @@ public:
         
         std::cout << "    a   b   c   d   e   f   g   h\n\n";
     }
-    
-    void remember_board();
     void reset_board() {
         // Очищаем все битборды
         white_pawn = black_pawn = 0;
@@ -180,9 +172,38 @@ public:
 
     uint64_t get_white_pawns() const { return white_pawn; }
     uint64_t get_black_pawns() const { return black_pawn; }
+    uint64_t get_white_knights() const { return white_knight; }
+    uint64_t get_black_knights() const { return black_knight; }
+    uint64_t get_white_bishops() const { return white_bishop; }
+    uint64_t get_black_bishops() const { return black_bishop; }
+    uint64_t get_white_rooks() const { return white_rook; }
+    uint64_t get_black_rooks() const { return black_rook; }
+    uint64_t get_white_queens() const { return white_queen; }
+    uint64_t get_black_queens() const { return black_queen; }
+    uint64_t get_white_kings() const { return white_king; }
+    uint64_t get_black_kings() const { return black_king; }
     uint64_t get_white_pieces() const { return white_pieces; }
     uint64_t get_black_pieces() const { return black_pieces; }
     uint64_t get_all_pieces() const { return all_pieces; }
+    uint64_t get_occupancy() const { return white_pieces | black_pieces; }
+    uint64_t get_pieces_by_value( const int value) {
+        switch (value) {
+                case 1: return get_white_pawns();
+                case -1: return get_black_pawns();
+                case 2: return get_white_knights();
+                case -2: return get_black_knights();
+                case 3: return get_white_bishops();
+                case -3: return get_black_bishops();
+                case 4: return get_white_rooks();
+                case -4: return get_black_rooks();
+                case 5: return get_white_queens();
+                case -5: return get_black_queens();
+                case 6: return get_white_kings();
+                case -6: return get_black_kings();
+                default: return 0;
+
+        }
+    };
 };
 
 #endif //BOARD_HH

@@ -1,8 +1,4 @@
-//
-// Created by Kirill on 8/2/2025.
-//
 
-#include "Piece.hh"
 
 #include "board.hh"
 
@@ -32,8 +28,9 @@ private:
     static constexpr Bitboard FILE_H = FILE_A << 7; // Rightmost file
 
 public:
-    bool is_attacked(const Board &board) const {
+    bool is_attacked(board& board, int nextsquare ) const {
         // Get opponent piece positions
+
         Bitboard opponent_pawns = board.get_piece_bitboard(is_white ? -1 : 1);
         Bitboard opponent_knights = board.get_piece_bitboard(is_white ? -2 : 2);
         Bitboard opponent_bishops = board.get_piece_bitboard(is_white ? -3 : 3);
@@ -120,5 +117,9 @@ private:
     }
     static  Bitboard queen_attacks(int sq, Bitboard occupied) {
         return bishop_attacks(sq, occupied) | rook_attacks(sq, occupied);
+    }
+    static  Bitboard king_moves(int sq) {
+        return king_attacks(sq);
+
     }
 };
