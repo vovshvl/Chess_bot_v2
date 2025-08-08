@@ -31,12 +31,12 @@ public:
     bool is_attacked(board& board, int nextsquare ) const {
         // Get opponent piece positions
 
-        Bitboard opponent_pawns = board.get_piece_bitboard(is_white ? -1 : 1);
-        Bitboard opponent_knights = board.get_piece_bitboard(is_white ? -2 : 2);
-        Bitboard opponent_bishops = board.get_piece_bitboard(is_white ? -3 : 3);
-        Bitboard opponent_rooks = board.get_piece_bitboard(is_white ? -4 : 4);
-        Bitboard opponent_queens = board.get_piece_bitboard(is_white ? -5 : 5);
-        Bitboard opponent_king = board.get_piece_bitboard(is_white ? -6 : 6);
+        Bitboard opponent_pawns = board.get_pieces_by_value(is_white ? -1 : 1);
+        Bitboard opponent_knights = board.get_pieces_by_value(is_white ? -2 : 2);
+        Bitboard opponent_bishops = board.get_pieces_by_value(is_white ? -3 : 3);
+        Bitboard opponent_rooks = board.get_pieces_by_value(is_white ? -4 : 4);
+        Bitboard opponent_queens = board.get_pieces_by_value(is_white ? -5 : 5);
+        Bitboard opponent_king = board.get_pieces_by_value(is_white ? -6 : 6);
 
         // Check attacks from all piece types
         return (pawn_attacks(square, !is_white) & opponent_pawns) ||
