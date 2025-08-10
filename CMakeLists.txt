@@ -6,4 +6,5 @@ set(CMAKE_CXX_STANDARD 20)
 add_executable(chess_bot_new
         Piece.cc
         engine.cc
-        main.cc)
+        main.cc
+        ChessGameDemo.hh)
