@@ -70,3 +70,8 @@ int evaluate_board(board chess_board) {
 
     return score;
 }
+class engine {
+
+
+
+}

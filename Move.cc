@@ -46,4 +46,5 @@ public:
             move_score += 100;
         }
     }
+    int get_move_score() const { return move_score; }
 };

@@ -186,7 +186,7 @@ public:
     uint64_t get_black_pieces() const { return black_pieces; }
     uint64_t get_all_pieces() const { return all_pieces; }
     uint64_t get_occupancy() const { return white_pieces | black_pieces; }
-    uint64_t get_pieces_by_value( const int value) {
+    uint64_t get_pieces_by_value( const int value) const {
         switch (value) {
                 case 1: return get_white_pawns();
                 case -1: return get_black_pawns();
