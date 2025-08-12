@@ -53,7 +53,7 @@ public:
     }
     
     void update_combined_bitboards() {
-        white_pieces = white_pawn | white_knight | white_bishop | 
+        white_pieces = white_pawn | white_knight | white_bishop |
                       white_rook | white_queen | white_king;
         black_pieces = black_pawn | black_knight | black_bishop | 
                       black_rook | black_queen | black_king;
@@ -79,8 +79,7 @@ public:
         
         // Сначала очищаем поле
         clear_square(square);
-        
-        // Затем устанавливаем нужную фигуру
+
         switch(piece) {
             case 'P': white_pawn |= bit; break;
             case 'p': black_pawn |= bit; break;
@@ -116,8 +115,7 @@ public:
         
         update_combined_bitboards();
     }
-    
-    // Функция для получения символа фигуры на определенном поле
+
     char get_piece_at_square(int square) const {
         uint64_t bit = 1ULL << square;
         
@@ -180,8 +178,8 @@ public:
     uint64_t get_black_rooks() const { return black_rook; }
     uint64_t get_white_queens() const { return white_queen; }
     uint64_t get_black_queens() const { return black_queen; }
-    uint64_t get_white_kings() const { return white_king; }
-    uint64_t get_black_kings() const { return black_king; }
+    uint64_t get_white_king() const { return white_king; }
+    uint64_t get_black_king() const { return black_king; }
     uint64_t get_white_pieces() const { return white_pieces; }
     uint64_t get_black_pieces() const { return black_pieces; }
     uint64_t get_all_pieces() const { return all_pieces; }
@@ -198,8 +196,8 @@ public:
                 case -4: return get_black_rooks();
                 case 5: return get_white_queens();
                 case -5: return get_black_queens();
-                case 6: return get_white_kings();
-                case -6: return get_black_kings();
+                case 6: return get_white_king();
+                case -6: return get_black_king();
                 default: return 0;
 
         }
