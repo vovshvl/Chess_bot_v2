@@ -28,7 +28,7 @@ private:
     static constexpr Bitboard FILE_H = FILE_A << 7; // Rightmost file
 
 public:
-    bool is_attacked(board& board, int nextsquare ) const {
+    static bool is_attacked(board& board, int square, bool is_white ) {
         // Get opponent piece positions
 
         Bitboard opponent_pawns = board.get_pieces_by_value(is_white ? -1 : 1);
@@ -44,6 +44,35 @@ public:
                (bishop_attacks(square, board.get_occupancy()) & (opponent_bishops | opponent_queens)) ||
                (rook_attacks(square, board.get_occupancy()) & (opponent_rooks | opponent_queens)) ||
                (king_attacks(square) & opponent_king);
+    }
+    static bool is_in_check(board& board, bool white){
+        int king_square;
+        if(white){
+            Bitboard wk = board.get_white_king();
+            king_square=__builtin_ctzll(wk);
+        }
+        else{
+            Bitboard bk = board.get_black_king();
+            king_square=__builtin_ctzll(bk);
+        }
+        return is_attacked(board, king_square, white);
+    }
+    static void all_legal_moves(board& board, bool white){
+        if(white) {
+            uint64_t pieces = board.get_white_pieces();
+            while (pieces) {
+                int square = __builtin_ctzll(pieces); // get index of LSB
+                pieces &= pieces - 1;
+
+                char piece = board.get_piece_at_square(square);
+            }
+        }
+    }
+    static bool is_mate(board& board, bool white){
+        if(is_in_check(board, white)){
+            return true;
+        }
+        return false;
     }
 
 private:
@@ -120,6 +149,5 @@ private:
     }
     static  Bitboard king_moves(int sq) {
         return king_attacks(sq);
-
     }
 };

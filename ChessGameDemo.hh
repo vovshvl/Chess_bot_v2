@@ -8,6 +8,7 @@
 #include <chrono>
 #include "board.hh"
 #include "Move.cc"
+#include "Piece.cc"
 #ifndef CHESS_BOT_NEW_CHESSGAMEDEMO_HH
 #define CHESS_BOT_NEW_CHESSGAMEDEMO_HH
 
@@ -228,6 +229,36 @@ public:
                 std::cout << "Incorrect square format" << std::endl;
             }
         }
+    }
+
+    void test_check(){
+        chess_board.reset_board();
+
+        // Clear the board completely
+        chess_board.white_pawn = chess_board.black_pawn = 0;
+        chess_board.white_knight = chess_board.black_knight = 0;
+        chess_board.white_bishop = chess_board.black_bishop = 0;
+        chess_board.white_rook = chess_board.black_rook = 0;
+        chess_board.white_queen = chess_board.black_queen = 0;
+        chess_board.white_king = chess_board.black_king = 0;
+
+        // White king on e1
+        chess_board.set_piece(4, 'K');
+        // Black rook on e8 (this puts white in check)
+        chess_board.set_piece(60, 'r');
+        // Black king somewhere safe, say h8
+        chess_board.set_piece(63, 'k');
+
+        // Show the board
+        std::cout << "Test position:" << std::endl;
+        chess_board.print_board();
+
+        // Check detection
+        bool white_in_check = Piece::is_in_check(chess_board, true);
+        bool black_in_check = Piece::is_in_check(chess_board, false);
+
+        std::cout << "White in check? " << (white_in_check ? "Yes" : "No") << std::endl;
+        std::cout << "Black in check? " << (black_in_check ? "Yes" : "No") << std::endl;
     }
 };
 

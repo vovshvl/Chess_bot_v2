@@ -6,6 +6,7 @@
 
 int main() {
     ChessGameDemo game;
+    game.test_check();
     game.play_demo_game();
     
     std::cout << "\n" << std::string(50, '=') << std::endl;
