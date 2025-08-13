@@ -1,5 +1,6 @@
 
-
+#include <array>
+#include <vector>
 #include "board.hh"
 
 class Piece {
@@ -28,22 +29,64 @@ private:
     static constexpr Bitboard FILE_H = FILE_A << 7; // Rightmost file
 
 public:
-    static bool is_attacked(board& board, int square, bool is_white ) {
-        // Get opponent piece positions
 
-        Bitboard opponent_pawns = board.get_pieces_by_value(is_white ? -1 : 1);
-        Bitboard opponent_knights = board.get_pieces_by_value(is_white ? -2 : 2);
-        Bitboard opponent_bishops = board.get_pieces_by_value(is_white ? -3 : 3);
-        Bitboard opponent_rooks = board.get_pieces_by_value(is_white ? -4 : 4);
-        Bitboard opponent_queens = board.get_pieces_by_value(is_white ? -5 : 5);
-        Bitboard opponent_king = board.get_pieces_by_value(is_white ? -6 : 6);
+    static bool is_attacked(board& chess_board, int square) {
+        // Determine if we're checking for white or black attacks
+        bool is_white = chess_board.is_white_piece(square);
 
-        // Check attacks from all piece types
-        return (pawn_attacks(square, !is_white) & opponent_pawns) ||
-               (knight_attacks(square) & opponent_knights) ||
-               (bishop_attacks(square, board.get_occupancy()) & (opponent_bishops | opponent_queens)) ||
-               (rook_attacks(square, board.get_occupancy()) & (opponent_rooks | opponent_queens)) ||
-               (king_attacks(square) & opponent_king);
+        // Get all opponent pieces
+        Bitboard opponent_pawns = chess_board.get_pieces_by_value(is_white ? -1 : 1);
+        Bitboard opponent_knights = chess_board.get_pieces_by_value(is_white ? -2 : 2);
+        Bitboard opponent_bishops = chess_board.get_pieces_by_value(is_white ? -3 : 3);
+        Bitboard opponent_rooks = chess_board.get_pieces_by_value(is_white ? -4 : 4);
+        Bitboard opponent_queens = chess_board.get_pieces_by_value(is_white ? -5 : 5);
+        Bitboard opponent_king = chess_board.get_pieces_by_value(is_white ? -6 : 6);
+
+
+        Bitboard occupied = chess_board.get_all_pieces();
+
+        if (pawn_attacks(square, !is_white) & opponent_pawns)
+            return true;
+
+        if (knight_attacks(square) & opponent_knights)
+            return true;
+
+        Bitboard bishop_queens = opponent_bishops | opponent_queens;
+        if (bishop_attacks(square, occupied) & bishop_queens)
+            return true;
+
+        Bitboard rook_queens = opponent_rooks | opponent_queens;
+        if (rook_attacks(square, occupied) & rook_queens)
+            return true;
+        if (king_attacks(square) & opponent_king)
+            return true;
+
+        return false;
+    }
+    std::vector<std::pair<int,int>> legal_moves(board chess_board, bool color) {
+        std::vector<std::pair<int,int>> all_moves;
+        if (color) {
+            uint64_t knight = chess_board.get_white_knights();
+            uint64_t bishop = chess_board.get_white_bishops();
+            uint64_t rook = chess_board.get_white_rooks();
+            uint64_t queen = chess_board.get_white_queens();
+            uint64_t king = chess_board.get_white_king();
+            uint64_t pawns = chess_board.get_white_pawns();
+
+
+        } else {
+            uint64_t knight = chess_board.get_black_knights();
+            uint64_t bishop = chess_board.get_black_bishops();
+            uint64_t rook = chess_board.get_black_rooks();
+            uint64_t queen = chess_board.get_black_queens();
+            uint64_t king = chess_board.get_black_king();
+            uint64_t pawns = chess_board.get_black_pawns();
+        }
+        if (king_is_in_check(chess_board, color)) {
+
+        }
+
+        return all_moves;
     }
     static bool is_in_check(board& board, bool white){
         int king_square;
@@ -55,7 +98,7 @@ public:
             Bitboard bk = board.get_black_king();
             king_square=__builtin_ctzll(bk);
         }
-        return is_attacked(board, king_square, white);
+        return is_attacked(board, king_square);
     }
     static void all_legal_moves(board& board, bool white){
         if(white) {
@@ -76,7 +119,29 @@ public:
     }
 
 private:
+    static Bitboard get_bitboard_by_square(int square) {
+        return 1ULL << square;
+    }
+    static std::vector<int> bitboard_to_array(Bitboard bb) {
+        std::vector<int> squares;
+        while (bb) {
+            int sq = __builtin_ctzll(bb); // Count trailing zeros = LSB index
+            squares.push_back(sq);
+            bb &= bb - 1; // Clear LSB
+        }
+        return squares;
+    }
+    static int get_square_by_bitboard(Bitboard bb) {
+        return  __builtin_ctzll(bb);
+    }
+    static bool king_is_in_check(board chess_board, bool color) {
+        if (color) {
+            uint64_t king = chess_board.get_white_king();
+            int king_square = get_square_by_bitboard(king);
+            return is_attacked(chess_board, king_square);
+        }
 
+    }
     static Bitboard pawn_attacks(int sq, bool is_white) {
         Bitboard bb = 1ULL << sq;
         // White pawns attack diagonally upward, black pawns attack diagonally downward
@@ -149,5 +214,6 @@ private:
     }
     static  Bitboard king_moves(int sq) {
         return king_attacks(sq);
+
     }
 };

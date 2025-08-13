@@ -7,4 +7,5 @@ add_executable(chess_bot_new
         Piece.cc
         engine.cc
         main.cc
-        ChessGameDemo.hh)
+        ChessGameDemo.hh
+)
