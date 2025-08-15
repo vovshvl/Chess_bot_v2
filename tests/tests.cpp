@@ -53,6 +53,7 @@ TEST(BoardTest, test_demogame){
     for (const auto& move : demo_moves){
         chess_board.execute_move(move);
     }
+    //dumb test
     //Italian game test
     for(int i=0; i<64; ++i){
         if(i==12){ EXPECT_EQ(chess_board.get_piece_at_square(i), '.'); }
