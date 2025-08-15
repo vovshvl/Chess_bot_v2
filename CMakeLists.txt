@@ -8,6 +8,10 @@ add_executable(chess_bot_new
         engine.cc
         main.cc
         ChessGameDemo.hh
+        tests/tests.cpp
+        tests/tests.cpp
+        tests/tests.cpp
+        tests/tests.cpp
 )
 
 enable_testing()
@@ -19,6 +23,9 @@ add_executable(chessbot_tests
         board.cc
         Move.cc
         ChessGameDemo.cc
+        tests/tests.cpp
+        tests/tests.cpp
+        tests/tests.cpp
 )
 target_link_libraries(chessbot_tests
         gtest
