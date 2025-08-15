@@ -101,17 +101,6 @@ public:
         }
         return is_attacked(board, king_square);
     }
-    static void all_legal_moves(board& board, bool white){
-        if(white) {
-            Bitboard pieces = board.get_white_pieces();
-            while (pieces) {
-                int square = __builtin_ctzll(pieces); // get index of LSB
-                pieces &= pieces - 1;
-
-                char piece = board.get_piece_at_square(square);
-            }
-        }
-    }
     static bool is_mate(board& board, bool white){
         if(is_in_check(board, white)){
             return true;
@@ -139,7 +128,7 @@ private:
 
     static Bitboard pawn_attacks(int sq, bool is_white) {
         Bitboard bb = 1ULL << sq;
-        // White pawns attack diagonally upward, black pawns attack diagonally downward
+
         return is_white
                    ? ((bb << 7) & ~FILE_H) | ((bb << 9) & ~FILE_A)
                    : ((bb >> 7) & ~FILE_A) | ((bb >> 9) & ~FILE_H);
@@ -209,7 +198,7 @@ private:
     }
     static Bitboard pawn_moves(int sq, bool is_white) {
         Bitboard bb = 1ULL << sq;
-        // White pawns move forward one square, black pawns move backward one square
+
         return (is_white
                    ? (bb << 8)
                    : (bb >> 8)) |pawn_attacks(sq, is_white);
