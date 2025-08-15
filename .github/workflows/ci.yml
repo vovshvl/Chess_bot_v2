@@ -11,17 +11,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Install dependencies
+      - name: Install build tools
         run: sudo apt-get update && sudo apt-get install -y build-essential cmake
 
-      - name: Configure CMake
-        run: cmake -B build -S .
+      - name: Compile tests
+        run: |
+          mkdir -p build
+          cd build
+          cmake ..
+          make
 
-      - name: Build
-        run: cmake --build build --config Release
-
-      - name: Run Tests
-        run: ./build/chessbot_tests
+      - name: Run tests
+        run: |
+          cd build
+          ctest --output-on-failure
