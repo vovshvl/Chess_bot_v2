@@ -241,5 +241,6 @@ private:
         if (is_white) {
 
         }
+        return EMPTY;
     }
 };
