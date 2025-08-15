@@ -8,14 +8,19 @@ add_executable(chess_bot_new
         engine.cc
         main.cc
         ChessGameDemo.hh
-        tests/tests.cpp
-        tests/tests.cpp
-        tests/tests.cpp
-        tests/tests.cpp
 )
 
 enable_testing()
-add_subdirectory(extern/googletest)
+
+include(FetchContent)
+FetchContent_Declare(
+        googletest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG        v1.15.2
+)
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
+
 add_executable(chessbot_tests
         tests/tests.cpp
         Piece.cc
@@ -23,12 +28,11 @@ add_executable(chessbot_tests
         board.cc
         Move.cc
         ChessGameDemo.cc
-        tests/tests.cpp
-        tests/tests.cpp
-        tests/tests.cpp
 )
+
 target_link_libraries(chessbot_tests
-        gtest
-        gtest_main
+        GTest::gtest_main
 )
-add_test(NAME chessbot_tests COMMAND chessbot_tests)
+
+include(GoogleTest)
+gtest_discover_tests(chessbot_tests)
