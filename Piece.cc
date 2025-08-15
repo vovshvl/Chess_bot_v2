@@ -228,14 +228,14 @@ private:
         return queen_attacks(sq, board.get_all_pieces());
     }
     static Bitboard king_moves(int sq, bool is_white, board& board) {
-        Bitboard possible_moves= king_attacks(sq)|;
+        Bitboard possible_moves= king_attacks(sq);
         for (auto sq: bitboard_to_array(possible_moves)) {
             if (is_white) {
 
             }
         }
 
-        return
+        return possible_moves;
     }
     static Bitboard is_defended(int sq, bool is_white,board chess_board) {
         if (is_white) {
