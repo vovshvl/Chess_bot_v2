@@ -7,7 +7,7 @@
 #include <thread>
 #include <chrono>
 #include "board.hh"
-#include "Move.cc"
+#include "Move.hh"
 #include "Piece.cc"
 #ifndef CHESS_BOT_NEW_CHESSGAMEDEMO_HH
 #define CHESS_BOT_NEW_CHESSGAMEDEMO_HH

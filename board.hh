@@ -5,6 +5,7 @@
 #ifndef BOARD_HH
 #include <cstdint>
 #include <iostream>
+#include "Move.hh"
 #define BOARD_HH
 
 class board {
@@ -166,6 +167,17 @@ public:
         
 
         init_board();
+    }
+    void execute_move(const Move& move) {
+        int from = move.get_from_square();
+        int to = move.get_to_square();
+
+        char moving_piece = get_piece_at_square(from);
+        char captured_piece = get_piece_at_square(to);
+
+        // Перемещаем фигуру
+        clear_square(from);
+        set_piece(to, moving_piece);
     }
 
     uint64_t get_white_pawns() const { return white_pawn; }

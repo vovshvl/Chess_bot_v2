@@ -3,28 +3,17 @@
 //
 #include <utility>
 #include <optional>
+#include "Move.hh"
 
-class Move {
-private:
-    int from_square;
-    int to_square;
-    std::optional<char> piece_captured;
-    std::optional<char> promotion;
-    bool castling_king;
-    bool castling_queen;
-    std::optional<int> en_passant_captured_square;
-    std::optional<bool> check;
-    int move_score;
 
-public:
-    Move(int from_square,
+    Move::Move(int from_square,
          int to_square,
-         std::optional<char> piece_captured = std::nullopt,
-         std::optional<char> promotion = std::nullopt,
-         bool castling_king = false,
-         bool castling_queen = false,
-         std::optional<int> en_passant_captured_square = std::nullopt,
-         std::optional<bool> check = std::nullopt)
+         std::optional<char> piece_captured,
+         std::optional<char> promotion,
+         bool castling_king,
+         bool castling_queen,
+         std::optional<int> en_passant_captured_square,
+         std::optional<bool> check)
         : from_square(from_square),
           to_square(to_square),
           piece_captured(piece_captured),
@@ -35,10 +24,10 @@ public:
           check(check),
           move_score(0) {}
 
-    int get_from_square() const { return from_square; }
-    int get_to_square() const { return to_square; }
+    int Move::get_from_square() const { return from_square; }
+    int Move::get_to_square() const { return to_square; }
 
-    void give_move_score() {
+    void Move::give_move_score() {
         if (check.has_value() && check.value()) {
             move_score += 1000;
         }
@@ -46,5 +35,4 @@ public:
             move_score += 100;
         }
     }
-    int get_move_score() const { return move_score; }
-};
+    int Move::get_move_score() const { return move_score; }
