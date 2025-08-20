@@ -23,7 +23,7 @@ public:
     uint64_t black_queen = 0;
     uint64_t white_king = 0;
     uint64_t black_king = 0;
-    
+
     // Совмещенные битборды
     uint64_t white_pieces = 0;
     uint64_t black_pieces = 0;

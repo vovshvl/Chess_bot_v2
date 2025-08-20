@@ -66,13 +66,19 @@ public:
     }
     std::vector<std::pair<int,int>> legal_moves(board chess_board, bool color) {
         std::vector<std::pair<int,int>> all_moves;
+        Bitboard knight;
+        Bitboard bishop;
+        Bitboard rook;
+        Bitboard queen;
+        Bitboard king;
+        Bitboard pawns;
         if (color) {
-            Bitboard knight = chess_board.get_white_knights();
-            Bitboard bishop = chess_board.get_white_bishops();
-            Bitboard rook = chess_board.get_white_rooks();
-            Bitboard queen = chess_board.get_white_queens();
-            Bitboard king = chess_board.get_white_king();
-            Bitboard pawns = chess_board.get_white_pawns();
+            knight = chess_board.get_white_knights();
+            bishop = chess_board.get_white_bishops();
+            rook = chess_board.get_white_rooks();
+            queen = chess_board.get_white_queens();
+            king = chess_board.get_white_king();
+            pawns = chess_board.get_white_pawns();
 
         }
         else {
@@ -86,6 +92,54 @@ public:
         if (is_in_check(chess_board, color)) {
 
 
+        }
+        else {
+            std::vector<int> knights_sq = bitboard_to_array(knight); //potentially uneffizient
+            for (int knight_sq : knights_sq) {
+                std::vector<int> possible_knight_moves_sq = bitboard_to_array(knight_moves(knight_sq, color, chess_board));
+                for (int pos_sq : possible_knight_moves_sq) {
+                    std::pair<int, int> move = {knight_sq, pos_sq};
+                    all_moves.push_back(move);
+                }
+            }
+            std::vector<int> pawns_sq = bitboard_to_array(pawns);
+            for (int pawn_sq : pawns_sq) {
+                std::vector<int> possible_pawn_moves_sq = bitboard_to_array(pawn_moves(pawn_sq, color, chess_board));
+                for (int pos_sq : possible_pawn_moves_sq) {
+                    std::pair<int, int> move = {pawn_sq, pos_sq};
+                    all_moves.push_back(move);
+                }
+            }
+            std::vector<int> bishops_sq = bitboard_to_array(bishop);
+            for (int bishop_sq : bishops_sq) {
+                std::vector<int> possible_bishop_moves_sq = bitboard_to_array(bishop_moves(bishop_sq, color, chess_board));
+                for (int pos_sq : possible_bishop_moves_sq) {
+                    std::pair<int, int> move = {bishop_sq, pos_sq};
+                    all_moves.push_back(move);
+                }
+            }
+            std::vector<int> rooks_sq = bitboard_to_array(rook);
+            for (int rook_sq : rooks_sq) {
+                std::vector<int> possible_rook_moves_sq = bitboard_to_array(rook_moves(rook_sq, color, chess_board));
+                for (int pos_sq : possible_rook_moves_sq) {
+                    std::pair<int, int> move = {rook_sq, pos_sq};
+                    all_moves.push_back(move);
+                }
+            }
+            std::vector<int> queens_sq = bitboard_to_array(queen);
+            for (int queen_sq : queens_sq) {
+                std::vector<int> possible_queen_moves_sq = bitboard_to_array(queen_moves(queen_sq, color, chess_board));
+                for (int pos_sq : possible_queen_moves_sq) {
+                    std::pair<int, int> move = {queen_sq, pos_sq};
+                    all_moves.push_back(move);
+                }
+            }
+            int king_sq = get_square_by_bitboard(king);
+            std::vector<int> possible_king_moves_sq = bitboard_to_array(king_moves(king_sq, color, chess_board));
+                for (int pos_sq : possible_king_moves_sq) {
+                    std::pair<int, int> move = {king_sq, pos_sq};
+                    all_moves.push_back(move);
+                }
         }
 
         return all_moves;
@@ -199,15 +253,36 @@ private:
     static Bitboard queen_attacks(int sq, board chess_board) {//
         return bishop_attacks(sq, chess_board) | rook_attacks(sq,chess_board );
     }
-    static Bitboard pawn_moves(int sq, bool is_white) {
+    static Bitboard pawn_moves(int sq, bool is_white, board& board) { //need to redo
         Bitboard bb = 1ULL << sq;
+        Bitboard occupied = is_white ? board.get_black_pieces() : board.get_white_pieces();
+        Bitboard all_occupied = board.get_all_pieces();
+        Bitboard moves = 0ULL;
 
-        return (is_white
-                   ? (bb << 8)
-                   : (bb >> 8)) |pawn_attacks(sq, is_white);
+        //single push
+        Bitboard single_push = is_white ? (bb << 8) : (bb >> 8);
+        moves |= single_push & ~all_occupied;
+
+        //double push
+        Bitboard double_push;
+        if (is_white && (8 <= sq && sq <= 15)) {
+            double_push = bb << 16;
+            if ((single_push & ~all_occupied) && (double_push & ~all_occupied)) {
+                moves |= double_push;
+            }
+        }
+        else if (!is_white && (48 <= sq && sq <= 55)) {
+            double_push = bb >> 16;
+            if ((single_push & ~all_occupied) && (double_push & ~all_occupied)) {
+                moves |= double_push;
+            }
+        }
+
+        return moves  | pawn_attacks(sq, is_white) & occupied;
     }
     static Bitboard knight_moves(int sq,bool is_white, board& board) {
-        Bitboard occupied = board.get_all_pieces();
+        //To do check implementation, doesnt account for friendly figures
+        Bitboard occupied = is_white ? board.get_black_pieces() : board.get_white_pieces();
         return knight_attacks(sq) & ~occupied;
     }
     static Bitboard bishop_moves(int sq, bool is_white, board& board) {
