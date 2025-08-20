@@ -26,13 +26,14 @@ private:
     static constexpr Bitboard FILE_A = 0x0101010101010101ULL; // Leftmost file
     static constexpr Bitboard FILE_B = FILE_A << 1;
     static constexpr Bitboard FILE_G = FILE_A << 6;
-    static constexpr Bitboard FILE_H = FILE_A << 7; // Rightmost file
+    static constexpr Bitboard FILE_H = FILE_A << 7;// Rightmost file
+    bool king_castle_black = false;
+    bool king_castle_white = false;
+    bool queen_castle_black = false;
+    bool queen_castle_white = false;
 
 public:
-
-    static bool is_attacked(board& chess_board, int square) {
-        // Determine if we're checking for white or black attacks
-        bool is_white = chess_board.is_white_piece(square);
+    static bool is_attacked(board& chess_board, int square,bool is_white) {
 
         // Get all opponent pieces
         Bitboard opponent_pawns = chess_board.get_pieces_by_value(is_white ? -1 : 1);
@@ -56,7 +57,7 @@ public:
             return true;
 
         Bitboard rook_queens = opponent_rooks | opponent_queens;
-        if (rook_attacks(square, occupied) & rook_queens)
+        if (rook_attacks(square, chess_board) & rook_queens)
             return true;
         if (king_attacks(square) & opponent_king)
             return true;
@@ -73,14 +74,14 @@ public:
             Bitboard king = chess_board.get_white_king();
             Bitboard pawns = chess_board.get_white_pawns();
 
-
-        } else {
-            Bitboard knight = chess_board.get_black_knights();
-            Bitboard bishop = chess_board.get_black_bishops();
-            Bitboard rook = chess_board.get_black_rooks();
-            Bitboard queen = chess_board.get_black_queens();
-            Bitboard king = chess_board.get_black_king();
-            Bitboard pawns = chess_board.get_black_pawns();
+        }
+        else {
+            knight = chess_board.get_black_knights();
+            bishop = chess_board.get_black_bishops();
+            rook = chess_board.get_black_rooks();
+            queen = chess_board.get_black_queens();
+            king = chess_board.get_black_king();
+            pawns = chess_board.get_black_pawns();
         }
         if (is_in_check(chess_board, color)) {
 
@@ -99,7 +100,7 @@ public:
             Bitboard bk = board.get_black_king();
             king_square=__builtin_ctzll(bk);
         }
-        return is_attacked(board, king_square);
+        return is_attacked(board, king_square,white);
     }
     static bool is_mate(board& board, bool white){
         if(is_in_check(board, white)){
@@ -134,16 +135,17 @@ private:
                    : ((bb >> 7) & ~FILE_A) | ((bb >> 9) & ~FILE_H);
     }
 
-    static Bitboard knight_attacks(int sq) {
+    static Bitboard knight_attacks(int sq)  {
         Bitboard bb = 1ULL << sq;
-        // Knight's eight possible moves in L-pattern
+        //To do check implementation, doesnt account for friendly figures
         return (((bb << 15) | (bb >> 17)) & ~FILE_H) |
                (((bb << 17) | (bb >> 15)) & ~FILE_A) |
                (((bb << 6) | (bb >> 10)) & ~(FILE_G | FILE_H)) |
                (((bb << 10) | (bb >> 6)) & ~(FILE_A | FILE_B));
     }
 
-    static Bitboard bishop_attacks(int sq, Bitboard occupied) {
+    static Bitboard bishop_attacks(int sq, board* chess_board) {
+        //To do check implementation, doesnt account for friendly figures
         Bitboard attacks = EMPTY;
         int r = sq / 8, f = sq % 8;
 
@@ -162,10 +164,11 @@ private:
         return attacks;
     }
 
-    static Bitboard rook_attacks(int sq, Bitboard occupied) {
+    static Bitboard rook_attacks(int sq, board chess_board) {
+        //To do check implementation, doesnt account for friendly figures
         Bitboard attacks = EMPTY;
+        Bitboard occupied = chess_board.get_all_pieces();
         int r = sq / 8, f = sq % 8;
-        // Generate attacks in all four orthogonal directions
         for (int d: {-1, 1}) {
             int rank = r + d;
             while (rank >= 0 && rank < 8) {
@@ -193,8 +196,8 @@ private:
                ((bb << 7) & ~FILE_H) | ((bb << 9) & ~FILE_A) |
                ((bb >> 7) & ~FILE_A) | ((bb >> 9) & ~FILE_H);
     }
-    static  Bitboard queen_attacks(int sq, Bitboard occupied) {
-        return bishop_attacks(sq, occupied) | rook_attacks(sq, occupied);
+    static Bitboard queen_attacks(int sq, board chess_board) {//
+        return bishop_attacks(sq, chess_board) | rook_attacks(sq,chess_board );
     }
     static Bitboard pawn_moves(int sq, bool is_white) {
         Bitboard bb = 1ULL << sq;
@@ -208,28 +211,32 @@ private:
         return knight_attacks(sq) & ~occupied;
     }
     static Bitboard bishop_moves(int sq, bool is_white, board& board) {
+        //To do check implementation, doesnt account for friendly figures
         return bishop_attacks(sq, board.get_all_pieces());
     }
     static Bitboard rook_moves(int sq, bool is_white, board& board) {
-        return rook_attacks(sq, board.get_all_pieces());
+        //To do check implementation, doesnt account for friendly figures
+        return rook_attacks(sq, board);
     }
     static Bitboard queen_moves(int sq, bool is_white, board& board) {
-        return queen_attacks(sq, board.get_all_pieces());
+        //To do check implementation, doesnt account for friendly figures
+        return queen_attacks(sq, board);
     }
     static Bitboard king_moves(int sq, bool is_white, board& board) {
-        Bitboard possible_moves= king_attacks(sq);
-        for (auto sq: bitboard_to_array(possible_moves)) {
-            if (is_white) {
-
+        Bitboard moves = king_attacks(sq);
+        Bitboard own_pieces = is_white ? board.get_white_pieces() : board.get_black_pieces();
+        moves &= ~own_pieces;
+        Bitboard safe_moves = EMPTY;
+        for (int target_sq : bitboard_to_array(moves)) {
+            if (!is_attacked(board, target_sq, is_white)) {
+                safe_moves |= 1ULL << target_sq;
             }
         }
 
-        return possible_moves;
+
+        return safe_moves;
     }
     static Bitboard is_defended(int sq, bool is_white,board chess_board) {
-        if (is_white) {
-
-        }
-        return EMPTY;
+        return is_attacked(chess_board, sq,!is_white);
     }
 };

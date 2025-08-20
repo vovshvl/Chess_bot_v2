@@ -28,6 +28,7 @@ public:
     int get_from_square() const;
     int get_to_square() const;
     int get_move_score() const;
+    int get_captured_piece() const;
 
     // Methoden
     void give_move_score();

@@ -179,6 +179,19 @@ public:
         clear_square(from);
         set_piece(to, moving_piece);
     }
+void reverse_move(const Move& move) {
+    int from = move.get_from_square();
+    int to = move.get_to_square();
+    char moving_piece = get_piece_at_square(to);
+    char captured_piece = move.get_captured_piece();
+
+    clear_square(to);
+    set_piece(from, moving_piece);
+
+    if (captured_piece != '.') {
+        set_piece(to, captured_piece);
+    }
+}
 
     uint64_t get_white_pawns() const { return white_pawn; }
     uint64_t get_black_pawns() const { return black_pawn; }

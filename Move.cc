@@ -35,4 +35,5 @@
             move_score += 100;
         }
     }
+
     int Move::get_move_score() const { return move_score; }
