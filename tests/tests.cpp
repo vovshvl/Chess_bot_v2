@@ -6,6 +6,8 @@
 #include "../Piece.cc"
 #include "../Move.hh"
 
+using Bitboard = uint64_t;
+
 TEST(BoardTest, test_check){
     board chess_board;
     chess_board.reset_board();
@@ -88,6 +90,120 @@ TEST(BoardTest, test_move){
             EXPECT_EQ(chess_board.get_piece_at_square(i),chess_board_before.get_piece_at_square(i));
         }
     }
-
-
 }
+
+//pawn_move test
+TEST(PieceTest, test_pawn_move){
+    board chess_board;
+    chess_board.init_board();
+
+    chess_board.set_piece(45, 'N'); //to check attack capture for black pawn on e5
+    chess_board.set_piece(43, 'b');//to check if pawn can be stopped by own pieces
+
+    int white_pawn_sq = 12;
+    Bitboard white_result_moves = 0;
+    white_result_moves |= (1ULL <<20);//e3
+    white_result_moves |= (1ULL <<28);//e4
+
+    int black_pawn_sq_1 = 52;
+    Bitboard black_result_moves_1 = 0;
+    black_result_moves_1 |= (1ULL <<44);//e6
+    black_result_moves_1 |= (1ULL <<36);//e5
+    black_result_moves_1 |= (1ULL <<45);//f4
+
+    int black_pawn_sq_2 = 51;
+    Bitboard black_result_moves_2 = 0;
+
+
+    Bitboard white_moves = Piece::pawn_moves(white_pawn_sq, true, chess_board);
+    Bitboard black_moves_1 = Piece::pawn_moves(black_pawn_sq_1, false, chess_board);
+    Bitboard black_moves_2 = Piece::pawn_moves(black_pawn_sq_2, false, chess_board);
+    EXPECT_EQ(white_moves, white_result_moves);
+    EXPECT_EQ(black_moves_1, black_result_moves_1);
+    EXPECT_EQ(black_moves_2, black_result_moves_2);
+}
+
+//knight_move test
+TEST(PieceTest, test_knight_move){
+    board chess_board;
+    chess_board.reset_board();
+
+    // Clear the board completely
+    chess_board.white_pawn = chess_board.black_pawn = 0;
+    chess_board.white_knight = chess_board.black_knight = 0;
+    chess_board.white_bishop = chess_board.black_bishop = 0;
+    chess_board.white_rook = chess_board.black_rook = 0;
+    chess_board.white_queen = chess_board.black_queen = 0;
+    chess_board.white_king = chess_board.black_king = 0;
+
+    // White knight on d3
+    chess_board.set_piece(19, 'N');
+    // Black knight on d6
+    chess_board.set_piece(40, 'n');
+    // White bishop on f4
+    chess_board.set_piece(29, 'B');
+    // Black rook on e1
+    chess_board.set_piece(4, 'r');
+
+
+    int white_knight_sq = 19;
+    Bitboard white_result_moves = 0;
+    white_result_moves |= (1ULL <<2);//c1
+    white_result_moves |= (1ULL <<4);//e1
+    white_result_moves |= (1ULL <<9);//b2
+    white_result_moves |= (1ULL <<13);//f2
+    white_result_moves |= (1ULL <<25);//b4
+    white_result_moves |= (1ULL <<34);//c5
+    white_result_moves |= (1ULL <<36);//e5
+
+    int black_knight_sq = 40;
+    Bitboard black_result_moves = 0;
+    black_result_moves |= (1ULL <<57);//b8
+    black_result_moves |= (1ULL <<50);//c7
+    black_result_moves |= (1ULL <<34);//c5
+    black_result_moves |= (1ULL <<25);//b4
+
+
+    Bitboard white_moves = Piece::knight_moves(white_knight_sq, true, chess_board);
+    EXPECT_EQ(white_moves, white_result_moves);
+
+    Bitboard black_moves = Piece::knight_moves(black_knight_sq, false, chess_board);
+    EXPECT_EQ(black_moves, black_result_moves);
+}
+// rook_move test
+TEST(PieceTest, test_rook_move) {
+    board chess_board;
+    chess_board.reset_board();
+
+    // Clear the board completely
+    chess_board.white_pawn = chess_board.black_pawn = 0;
+    chess_board.white_knight = chess_board.black_knight = 0;
+    chess_board.white_bishop = chess_board.black_bishop = 0;
+    chess_board.white_rook = chess_board.black_rook = 0;
+    chess_board.white_queen = chess_board.black_queen = 0;
+    chess_board.white_king = chess_board.black_king = 0;
+
+    // Place white rook on d4 (square 27)
+    chess_board.set_piece(27, 'R');
+
+    // Place blockers
+    chess_board.set_piece(19, 'P'); // white pawn on d3 (blocks down)
+    chess_board.set_piece(35, 'p'); // black pawn on d5 (can capture up)
+    chess_board.set_piece(29, 'B'); // white bishop on f4 (blocks right)
+    chess_board.set_piece(24, 'n'); // black knight on a4 (can capture left)
+
+    int white_rook_sq = 27;
+    Bitboard white_result_moves = 0;
+    white_result_moves |= (1ULL <<24);//a4
+    white_result_moves |= (1ULL <<25);//b4
+    white_result_moves |= (1ULL <<26);//c4
+    white_result_moves |= (1ULL <<28);//e4
+    white_result_moves |= (1ULL <<35);//d5
+
+
+    // Run function
+    Bitboard white_rook_moves = Piece::rook_moves(27, true, chess_board);
+
+    EXPECT_EQ(white_rook_moves, white_result_moves);
+}
+

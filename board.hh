@@ -227,6 +227,61 @@ void reverse_move(const Move& move) {
 
         }
     };
+    uint8_t get_rank(uint64_t board, int rank) {
+        return (board >> (rank*8)) & 0xFF;
+    }
+
+    uint8_t get_file(uint64_t board, int file) {
+        uint8_t f = 0;
+        for (int r = 0; r < 8; ++r)
+            if (board & (1ULL << (r*8 + file))) f |= (1 << r);
+        return f;
+    }
+    // Returns a bitboard with only the piece at the given square (0 if no piece)
+    uint64_t get_piece_bitboard_at_square(int square) const {
+        uint64_t mask = 1ULL << square;
+
+        if (white_pawn & mask)   return white_pawn & mask;
+        if (black_pawn & mask)   return black_pawn & mask;
+        if (white_knight & mask) return white_knight & mask;
+        if (black_knight & mask) return black_knight & mask;
+        if (white_bishop & mask) return white_bishop & mask;
+        if (black_bishop & mask) return black_bishop & mask;
+        if (white_rook & mask)   return white_rook & mask;
+        if (black_rook & mask)   return black_rook & mask;
+        if (white_queen & mask)  return white_queen & mask;
+        if (black_queen & mask)  return black_queen & mask;
+        if (white_king & mask)   return white_king & mask;
+        if (black_king & mask)   return black_king & mask;
+
+        return 0ULL;
+    }
+    // Reverse the bits of an 8-bit number, helper for moves
+    static uint8_t reverse8(uint8_t b) {
+        b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
+        b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
+        b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
+        return b;
+    }
+// Convert 8-bit rank attack mask back to 64-bit bitboard
+    static uint64_t rank_to_bitboard(uint8_t rank_mask, int rank) {
+        return ((uint64_t)rank_mask) << (rank * 8);
+    }
+
+// Convert 8-bit file attack mask back to 64-bit bitboard
+    uint64_t file_to_bitboard(uint8_t file_bits, int file) {
+        uint64_t bb = 0ULL;
+        for (int r = 0; r < 8; r++) {
+            if (file_bits & (1 << r)) {
+                // bit r of file_bits corresponds to rank r
+                bb |= 1ULL << (r*8 + file);
+            }
+        }
+        return bb;
+    }
+
+
+
 };
 
 #endif //BOARD_HH
