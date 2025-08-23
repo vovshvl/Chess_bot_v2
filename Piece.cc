@@ -53,8 +53,8 @@ public:
             return true;
 
         Bitboard bishop_queens = opponent_bishops | opponent_queens;
-        //if (bishop_attacks(square, occupied) & bishop_queens)
-            //return true;
+        if (bishop_attacks(square, chess_board) & bishop_queens)
+            return true;
 
         Bitboard rook_queens = opponent_rooks | opponent_queens;
         if (rook_attacks(square, chess_board) & rook_queens)
@@ -196,18 +196,21 @@ public:
                (((bb << 10) | (bb >> 6)) & ~(FILE_A | FILE_B));
     }
 
-    static Bitboard bishop_attacks(int sq, board* chess_board) {
+    static Bitboard bishop_attacks(int sq, const board& chess_board) {
         //To do check implementation, doesnt account for friendly figures
         Bitboard attacks = EMPTY;
         int r = sq / 8, f = sq % 8;
-
+        bool is_white=chess_board.is_white_piece(sq);
+        Bitboard enemy_pieces = is_white ? chess_board.get_black_pieces() : chess_board.get_white_pieces();
+        Bitboard our_pieces = is_white ? chess_board.get_white_pieces() : chess_board.get_black_pieces();
         for (int dr: {-1, 1}) {
             for (int df: {-1, 1}) {
                 int rank = r + dr, file = f + df;
                 while (rank >= 0 && rank < 8 && file >= 0 && file < 8) {
                     int target_sq = rank * 8 + file;
+                    if (our_pieces & (1ULL << target_sq)) break;
                     attacks |= 1ULL << target_sq;
-                    //if (occupied & (1ULL << target_sq)) break;
+                    if (enemy_pieces & (1ULL << target_sq)) break;
                     rank += dr;
                     file += df;
                 }
@@ -248,8 +251,8 @@ public:
                ((bb << 7) & ~FILE_H) | ((bb << 9) & ~FILE_A) |
                ((bb >> 7) & ~FILE_A) | ((bb >> 9) & ~FILE_H);
     }
-    static Bitboard queen_attacks(int sq, board chess_board) {//
-        //return bishop_attacks(sq, chess_board) | rook_attacks(sq,chess_board );
+    static Bitboard queen_attacks(int sq,bool is_white, board chess_board) {//
+        return bishop_attacks(sq, chess_board) | rook_moves(sq,is_white,chess_board );
     }
     static Bitboard pawn_moves(int sq, bool is_white, board& board) { //need to redo
         Bitboard bb = 1ULL << sq;
@@ -285,7 +288,7 @@ public:
     }
     static Bitboard bishop_moves(int sq, bool is_white, board& board) {
         //To do check implementation, doesnt account for friendly figures
-        //return bishop_attacks(sq, board.get_all_pieces());
+        return bishop_attacks(sq, board);
     }
     static Bitboard rook_moves(int sq, bool is_white, board& board) { //Explanation on  https://www.chessprogramming.org/Efficient_Generation_of_Sliding_Piece_Attacks#Sliding_Attacks_by_Calculation
         //To do check implementation, doesnt account for friendly figures
@@ -308,7 +311,7 @@ public:
     }
     static Bitboard queen_moves(int sq, bool is_white, board& board) {
         //To do check implementation, doesnt account for friendly figures
-        return queen_attacks(sq, board);
+        return queen_attacks(sq, is_white,board);
     }
     static Bitboard king_moves(int sq, bool is_white, board& board) {
         Bitboard moves = king_attacks(sq);

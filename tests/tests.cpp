@@ -206,4 +206,50 @@ TEST(PieceTest, test_rook_move) {
 
     EXPECT_EQ(white_rook_moves, white_result_moves);
 }
+TEST(PieceTest, test_bishop_move) {
+    board chess_board;
+    chess_board.reset_board();
+    chess_board.white_pawn = chess_board.black_pawn = 0;
+    chess_board.white_knight = chess_board.black_knight = 0;
+    chess_board.white_bishop = chess_board.black_bishop = 0;
+    chess_board.white_rook = chess_board.black_rook = 0;
+    chess_board.white_queen = chess_board.black_queen = 0;
+    chess_board.white_king = chess_board.black_king = 0;
+
+    // White bishop on d4 (square 27)
+    chess_board.set_piece(27, 'B');
+    // Black bishop on f6 (square 45)
+    chess_board.set_piece(45, 'b');
+    // White pawn on c3 (square 18) - blocks white bishop SW
+    chess_board.set_piece(18, 'P');
+    // Black rook on e5 (square 36) - can be captured by white bishop
+    chess_board.set_piece(36, 'r');
+    // White knight on g7 (square 54) - can be captured by black bishop
+    chess_board.set_piece(54, 'N');
+    // Black pawn on e7 (square 52) - blocks black bishop NE
+    chess_board.set_piece(52, 'p');
+
+    // Expected moves for white bishop on d4
+    Bitboard white_result_moves = 0;
+    white_result_moves |= (1ULL << 36); // e5 (capture)
+    white_result_moves |= (1ULL << 34); // c5
+    white_result_moves |= (1ULL << 41); // b6
+    white_result_moves |= (1ULL << 48); // a7
+    white_result_moves |= (1ULL << 20); // e3
+    white_result_moves |= (1ULL << 13); // f2
+    white_result_moves |= (1ULL << 6);  // g1
+
+
+    Bitboard black_result_moves = 0;
+    black_result_moves |= (1ULL << 54); // g7 (capture)
+    black_result_moves |= (1ULL << 38); // g5
+    black_result_moves |= (1ULL << 31); // h4
+
+
+    Bitboard white_moves = Piece::bishop_attacks(27, chess_board);
+    Bitboard black_moves = Piece::bishop_attacks(45, chess_board);
+
+    EXPECT_EQ(white_moves, white_result_moves);
+    EXPECT_EQ(black_moves, black_result_moves);
+}
 
