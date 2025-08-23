@@ -13,4 +13,4 @@
    - checkmask legal moves
 9) Checkmate ✅
 10) ALPHA-BETA pruning ❌
-11) 
+11) Evaluate Board ❌
