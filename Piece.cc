@@ -64,6 +64,20 @@ public:
 
         return false;
     }
+
+    std::vector<std::pair<int, char>> attackers(board& board, bool is_white, int sq){
+        Bitboard all_pieces = board.get_all_pieces();
+        Bitboard enemy_pieces = 0;
+
+        Bitboard checkmask = queen_attacks(sq, is_white, board) | knight_attacks(sq);
+
+        if(is_white){
+            enemy_pieces = board.get_black_pieces();
+        }
+        else{
+            enemy_pieces = board.get_white_pieces();
+        }
+    }
     std::vector<std::pair<int,int>> legal_moves(board chess_board, bool color) {
         std::vector<std::pair<int,int>> all_moves;
         Bitboard knight;
@@ -90,6 +104,14 @@ public:
             pawns = chess_board.get_black_pawns();
         }
         if (is_in_check(chess_board, color)) {
+            Bitboard king_board = 0;
+            if(is_white){
+                king_board = chess_board.get_white_king();
+            }
+            else{
+                king_board = chess_board.get_black_king();
+            }
+            int king_sq = __builtin_ctzll(king_board);
 
 
         }
