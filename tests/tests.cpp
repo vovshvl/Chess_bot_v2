@@ -246,8 +246,8 @@ TEST(PieceTest, test_bishop_move) {
     black_result_moves |= (1ULL << 31); // h4
 
 
-    Bitboard white_moves = Piece::bishop_attacks(27, chess_board);
-    Bitboard black_moves = Piece::bishop_attacks(45, chess_board);
+    Bitboard white_moves = Piece::bishop_attacks(27,true,  chess_board);
+    Bitboard black_moves = Piece::bishop_attacks(45,false, chess_board);
 
     EXPECT_EQ(white_moves, white_result_moves);
     EXPECT_EQ(black_moves, black_result_moves);
@@ -290,10 +290,136 @@ TEST(PieceTest, test_attackers){
     white_pawn_result_attackers.emplace_back(36,'p');
     white_pawn_result_attackers.emplace_back(37,'n');
 
-    std::vector<std::pair<int, char>> white_attackers = Piece::attackers(chess_board, true, 27);
+    std::vector<std::pair<int, char>> white_attackers = Piece::attackers(27, true, chess_board);
     std::sort(white_attackers.begin(), white_attackers.end());
 
     EXPECT_EQ(white_pawn_result_attackers, white_attackers);
 
+}
+TEST(PieceTest, test_legal_moves_single_check_without_block) {
+    board chess_board;
+    chess_board.reset_board();
+
+    // Clear the board completely
+    chess_board.white_pawn = chess_board.black_pawn = 0;
+    chess_board.white_knight = chess_board.black_knight = 0;
+    chess_board.white_bishop = chess_board.black_bishop = 0;
+    chess_board.white_rook = chess_board.black_rook = 0;
+    chess_board.white_queen = chess_board.black_queen = 0;
+    chess_board.white_king = chess_board.black_king = 0;
+
+    // White king on e1 (square 4)
+    chess_board.set_piece(4, 'K');
+    // White rook on d1 (square 3)
+    chess_board.set_piece(3, 'R');
+    // Black rook giving check on e8 (square 60)
+    chess_board.set_piece(60, 'r');
+    // Black king on h8 (square 63)
+    chess_board.set_piece(63, 'k');
+
+    std::vector<std::pair<int,int>> white_legal_moves = Piece::legal_moves(chess_board, true);
+
+    std::vector<std::pair<int,int>> expected_moves = {
+            {4, 5}, {4, 11}, {4, 13},
+    };
+
+    std::sort(white_legal_moves.begin(), white_legal_moves.end());
+    std::sort(expected_moves.begin(), expected_moves.end());
+
+    EXPECT_EQ(white_legal_moves, expected_moves);
+}
+
+TEST(PieceTest, test_legal_moves_single_check_with_block) {
+    board chess_board;
+    chess_board.reset_board();
+
+    // Clear the board completely
+    chess_board.white_pawn = chess_board.black_pawn = 0;
+    chess_board.white_knight = chess_board.black_knight = 0;
+    chess_board.white_bishop = chess_board.black_bishop = 0;
+    chess_board.white_rook = chess_board.black_rook = 0;
+    chess_board.white_queen = chess_board.black_queen = 0;
+    chess_board.white_king = chess_board.black_king = 0;
+
+    // White king on e1 (square 4)
+    chess_board.set_piece(4, 'K');
+    // White rook on d2 (square 11)
+    chess_board.set_piece(11, 'R');
+    // Black rook giving check on e8 (square 60)
+    chess_board.set_piece(60, 'r');
+    // Black king on h8 (square 63)
+    chess_board.set_piece(63, 'k');
+
+    std::vector<std::pair<int,int>> white_legal_moves = Piece::legal_moves(chess_board, true);
+
+    std::vector<std::pair<int,int>> expected_moves = {
+            {4, 3}, {4, 5}, {4, 13}, {11, 12}
+    };
+
+    std::sort(white_legal_moves.begin(), white_legal_moves.end());
+    std::sort(expected_moves.begin(), expected_moves.end());
+
+    EXPECT_EQ(white_legal_moves, expected_moves);
+}
+
+TEST(PieceTest, test_legal_moves_double_check_with_block) {
+    board chess_board;
+    chess_board.reset_board();
+
+    // Clear the board completely
+    chess_board.white_pawn = chess_board.black_pawn = 0;
+    chess_board.white_knight = chess_board.black_knight = 0;
+    chess_board.white_bishop = chess_board.black_bishop = 0;
+    chess_board.white_rook = chess_board.black_rook = 0;
+    chess_board.white_queen = chess_board.black_queen = 0;
+    chess_board.white_king = chess_board.black_king = 0;
+
+    // White king on e1 (square 4)
+    chess_board.set_piece(4, 'K');
+    // White rook on d2 (square 11)
+    chess_board.set_piece(11, 'R');
+    // Black rook giving check on e8 (square 60)
+    chess_board.set_piece(60, 'r');
+    // Black bishop on h4 (square 31)
+    chess_board.set_piece(31, 'b');
+    // Black king on h8 (square 63)
+    chess_board.set_piece(63, 'k');
+
+    std::vector<std::pair<int,int>> white_legal_moves = Piece::legal_moves(chess_board, true);
+
+    std::vector<std::pair<int,int>> expected_moves = {
+            {4, 3}, {4, 5}
+    };
+
+    std::sort(white_legal_moves.begin(), white_legal_moves.end());
+    std::sort(expected_moves.begin(), expected_moves.end());
+
+    EXPECT_EQ(white_legal_moves, expected_moves);
+}
+
+TEST(PieceTest, test_mate) {
+    board chess_board;
+    chess_board.reset_board();
+
+    // Clear the board completely
+    chess_board.white_pawn = chess_board.black_pawn = 0;
+    chess_board.white_knight = chess_board.black_knight = 0;
+    chess_board.white_bishop = chess_board.black_bishop = 0;
+    chess_board.white_rook = chess_board.black_rook = 0;
+    chess_board.white_queen = chess_board.black_queen = 0;
+    chess_board.white_king = chess_board.black_king = 0;
+
+    // White king on a1a (square 0)
+    chess_board.set_piece(0, 'K');
+    // Black rook on h1 (square 7)
+    chess_board.set_piece(7, 'r');
+    // Black rook on g2 (square 7)
+    chess_board.set_piece(14, 'r');
+    // Black king on h8 (square 63)
+    chess_board.set_piece(63, 'k');
+
+    bool is_mate = Piece::is_mate(chess_board, true);
+
+    EXPECT_EQ(is_mate, true);
 }
 

@@ -280,6 +280,30 @@ void reverse_move(const Move& move) {
         return bb;
     }
 
+    static uint64_t squares_between(int sq1, int sq2) {
+        uint64_t mask = 0ULL;
+
+        int r1 = sq1 / 8, f1 = sq1 % 8;
+        int r2 = sq2 / 8, f2 = sq2 % 8;
+
+        int dr = (r2 - r1) ? ((r2 - r1) / abs(r2 - r1)) : 0;
+        int df = (f2 - f1) ? ((f2 - f1) / abs(f2 - f1)) : 0;
+
+        // Not on same rank/file/diagonal → no squares between
+        if (!((dr == 0 && df != 0) || (dr != 0 && df == 0) || (abs(dr) == abs(df)))) {
+            return 0ULL;
+        }
+
+        int r = r1 + dr;
+        int f = f1 + df;
+        while (r != r2 || f != f2) {
+            mask |= 1ULL << (r * 8 + f);
+            r += dr;
+            f += df;
+        }
+
+        return mask;
+    }
 
 
 };
