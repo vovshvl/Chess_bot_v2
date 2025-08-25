@@ -253,3 +253,47 @@ TEST(PieceTest, test_bishop_move) {
     EXPECT_EQ(black_moves, black_result_moves);
 }
 
+TEST(PieceTest, test_attackers){
+    board chess_board;
+    chess_board.reset_board();
+    chess_board.white_pawn = chess_board.black_pawn = 0;
+    chess_board.white_knight = chess_board.black_knight = 0;
+    chess_board.white_bishop = chess_board.black_bishop = 0;
+    chess_board.white_rook = chess_board.black_rook = 0;
+    chess_board.white_queen = chess_board.black_queen = 0;
+    chess_board.white_king = chess_board.black_king = 0;
+
+    // White pawn on d4(27)
+    chess_board.set_piece(27, 'P');
+    // White rook on d7(51)
+    chess_board.set_piece(51, 'R');
+    // Black rook on d8(59)
+    chess_board.set_piece(59, 'r');
+    // Black rook on d1(3)
+    chess_board.set_piece(3, 'r');
+    // Black rook on c1(2)
+    chess_board.set_piece(2, 'r');
+    // Black knight on h1(7)
+    chess_board.set_piece(7, 'n');
+    // Black knight on f5(37)
+    chess_board.set_piece(37, 'n');
+    // Black queen on a4(24)
+    chess_board.set_piece(24, 'q');
+    // Black queen on h6(47)
+    chess_board.set_piece(47, 'q');
+    // Black pawn on e5(36)
+    chess_board.set_piece(36, 'p');
+
+    std::vector<std::pair<int, char>> white_pawn_result_attackers;
+    white_pawn_result_attackers.emplace_back(3,'r');
+    white_pawn_result_attackers.emplace_back(24,'q');
+    white_pawn_result_attackers.emplace_back(36,'p');
+    white_pawn_result_attackers.emplace_back(37,'n');
+
+    std::vector<std::pair<int, char>> white_attackers = Piece::attackers(chess_board, true, 27);
+    std::sort(white_attackers.begin(), white_attackers.end());
+
+    EXPECT_EQ(white_pawn_result_attackers, white_attackers);
+
+}
+

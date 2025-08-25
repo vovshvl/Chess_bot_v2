@@ -1,6 +1,7 @@
 
 #include <array>
 #include <vector>
+#include <algorithm>
 #include "board.hh"
 
 class Piece {
@@ -65,18 +66,57 @@ public:
         return false;
     }
 
-    std::vector<std::pair<int, char>> attackers(board& board, bool is_white, int sq){
-        Bitboard all_pieces = board.get_all_pieces();
+    static std::vector<std::pair<int, char>> attackers(board& chess_board, bool is_white, int sq){
+        Bitboard all_pieces = chess_board.get_all_pieces();
         Bitboard enemy_pieces = 0;
+        std::vector<std::pair<int, char>> result;
 
-        Bitboard checkmask = queen_attacks(sq, is_white, board) | knight_attacks(sq);
+        Bitboard checkmask = queen_attacks(sq, is_white, chess_board) | knight_attacks(sq);
 
         if(is_white){
-            enemy_pieces = board.get_black_pieces();
+            enemy_pieces = chess_board.get_black_pieces();
         }
         else{
-            enemy_pieces = board.get_white_pieces();
+            enemy_pieces = chess_board.get_white_pieces();
         }
+        if((checkmask | enemy_pieces) == 0ULL){
+            //not under attack
+            //Consider attacks, because if the pawn is standing on the diagonal there will be no optimisation, although it is not attacking
+            return {};
+        }
+        Bitboard enemy_pawns   = is_white ? chess_board.get_black_pawns()   : chess_board.get_white_pawns();
+        Bitboard enemy_knights = is_white ? chess_board.get_black_knights() : chess_board.get_white_knights();
+        Bitboard enemy_bishops = is_white ? chess_board.get_black_bishops() : chess_board.get_white_bishops();
+        Bitboard enemy_rooks   = is_white ? chess_board.get_black_rooks()   : chess_board.get_white_rooks();
+        Bitboard enemy_queens  = is_white ? chess_board.get_black_queens()  : chess_board.get_white_queens();
+        Bitboard enemy_king    = is_white ? chess_board.get_black_king()    : chess_board.get_white_king();
+
+        Bitboard pawn_attackers = enemy_pawns & pawn_attacks(sq, is_white);
+        Bitboard knight_attackers = enemy_knights & knight_attacks(sq);
+        Bitboard bishop_attackers = enemy_bishops & bishop_attacks(sq, chess_board);
+        Bitboard rook_attackers = enemy_rooks  & rook_attacks(sq, chess_board); // !is_white sus
+        Bitboard queen_attackers = enemy_queens & queen_attacks(sq,is_white, chess_board);
+        Bitboard king_attackers   = king_attacks(sq) & enemy_king;
+
+        auto add_attackers = [&](Bitboard bb, char piece_char) {
+            // Adjust for color: uppercase if white, lowercase if black
+            char final_char = is_white ? tolower(piece_char) : toupper(piece_char);
+            while (bb) {
+                int from_sq = __builtin_ctzll(bb); // index of LS1B
+                result.push_back({from_sq, final_char});
+                bb &= bb - 1; // clear LS1B
+            }
+        };
+
+        add_attackers(pawn_attackers, 'P');
+        add_attackers(knight_attackers, 'N');
+        add_attackers(bishop_attackers, 'B');
+        add_attackers(rook_attackers, 'R');
+        add_attackers(king_attackers, 'K');
+        add_attackers(queen_attackers, 'Q');
+
+        return result;
+
     }
     std::vector<std::pair<int,int>> legal_moves(board chess_board, bool color) {
         std::vector<std::pair<int,int>> all_moves;
