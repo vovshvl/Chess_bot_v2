@@ -34,7 +34,7 @@ private:
     bool queen_castle_white = false;
 
 public:
-    static bool is_attacked(board& chess_board, int square,bool is_white) {
+    static bool is_attacked(const board&  chess_board, int square,bool is_white) {
 
         // Get all opponent pieces
         Bitboard opponent_pawns = chess_board.get_pieces_by_value(is_white ? -1 : 1);
@@ -43,9 +43,6 @@ public:
         Bitboard opponent_rooks = chess_board.get_pieces_by_value(is_white ? -4 : 4);
         Bitboard opponent_queens = chess_board.get_pieces_by_value(is_white ? -5 : 5);
         Bitboard opponent_king = chess_board.get_pieces_by_value(is_white ? -6 : 6);
-
-
-        Bitboard occupied = chess_board.get_all_pieces();
 
         if (pawn_attacks(square, !is_white) & opponent_pawns)
             return true;
@@ -66,7 +63,7 @@ public:
         return false;
     }
 
-    static std::vector<std::pair<int, char>> attackers(int sq, bool is_white, board& chess_board){
+    static std::vector<std::pair<int, char>> attackers(int sq, bool is_white, const board& chess_board){
         Bitboard all_pieces = chess_board.get_all_pieces();
         Bitboard enemy_pieces = 0;
         std::vector<std::pair<int, char>> result;
@@ -263,7 +260,7 @@ public:
 
         return all_moves;
     }
-    static bool is_in_check(board& board, bool white){
+    static bool is_in_check(const board& board, bool white){
         int king_square;
         if(white){
             Bitboard wk = board.get_white_king();
@@ -275,9 +272,9 @@ public:
         }
         return is_attacked(board, king_square,white);
     }
-    static bool is_mate(board& board, bool is_white){
+    static bool is_mate(const board& board, bool is_white){
         if(is_in_check(board, is_white)){
-            if(legal_moves(board, is_white).size()==0){return true;}
+            if(legal_moves(board, is_white).empty()){return true;}
         }
         return false;
     }
@@ -338,7 +335,7 @@ public:
         return attacks;
     }
 
-    static Bitboard rook_attacks(int sq, board chess_board) {
+    static Bitboard rook_attacks(int sq,const board& chess_board) {
         //To do check implementation, doesnt account for friendly figures
         Bitboard attacks = EMPTY;
         Bitboard occupied = chess_board.get_all_pieces();
@@ -373,7 +370,7 @@ public:
     static Bitboard queen_attacks(int sq,bool is_white, board chess_board) {//
         return bishop_attacks(sq,is_white, chess_board) | rook_moves(sq,is_white,chess_board );
     }
-    static Bitboard pawn_moves(int sq, bool is_white, board& board) { //need to redo
+    static Bitboard pawn_moves(int sq, bool is_white,const board& board) { //need to redo
         Bitboard bb = 1ULL << sq;
         Bitboard occupied = is_white ? board.get_black_pieces() : board.get_white_pieces();
         Bitboard all_occupied = board.get_all_pieces();
@@ -400,12 +397,12 @@ public:
 
         return moves  | pawn_attacks(sq, is_white) & occupied;
     }
-    static Bitboard knight_moves(int sq,bool is_white, board& board) {
+    static Bitboard knight_moves(int sq,bool is_white,const board& board) {
         //To do check implementation, doesnt account for friendly figures
         Bitboard occupied = is_white ? board.get_white_pieces() : board.get_black_pieces();
         return knight_attacks(sq) & ~occupied;
     }
-    static Bitboard bishop_moves(int sq, bool is_white, board& board) {
+    static Bitboard bishop_moves(int sq, bool is_white, const board& board) {
         //To do check implementation, doesnt account for friendly figures
         return bishop_attacks(sq,is_white, board);
     }
@@ -428,11 +425,11 @@ public:
         return moves & ~own_pieces;
 
     }
-    static Bitboard queen_moves(int sq, bool is_white, board& board) {
+    static Bitboard queen_moves(int sq, bool is_white,const board& board) {
         //To do check implementation, doesnt account for friendly figures
         return queen_attacks(sq, is_white,board);
     }
-    static Bitboard king_moves(int sq, bool is_white, board& board) {
+    static Bitboard king_moves(int sq, bool is_white, const board& board) {
         Bitboard moves = king_attacks(sq);
         Bitboard own_pieces = is_white ? board.get_white_pieces() : board.get_black_pieces();
         moves &= ~own_pieces;
@@ -446,7 +443,7 @@ public:
 
         return safe_moves;
     }
-    static Bitboard is_defended(int sq, bool is_white,board chess_board) {
+    static Bitboard is_defended(int sq, bool is_white,const board& chess_board) {
         return is_attacked(chess_board, sq,!is_white);
     }
 };
