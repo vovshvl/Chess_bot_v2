@@ -1,6 +1,7 @@
 # Chess Bot
 ### Important notes
-1. Board is enumerated from a1(0) to h8(63) with b1(1) being the second element. 
+1. Board is enumerated from a1(0) to h8(63) with b1(1) being the second element.
+2. Castling works like normal kings legal move and moving the rook is handled though execute_move
 
 ### List to Do
 1) Write tests ⚠️
