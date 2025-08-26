@@ -397,7 +397,7 @@ TEST(PieceTest, test_legal_moves_double_check_with_block) {
     EXPECT_EQ(white_legal_moves, expected_moves);
 }
 
-TEST(PieceTest, test_mate) {
+TEST(BoardTest, test_mate) {
     board chess_board;
     chess_board.reset_board();
 
@@ -422,4 +422,143 @@ TEST(PieceTest, test_mate) {
 
     EXPECT_EQ(is_mate, true);
 }
+TEST(PieceTest, test_castling) {
+    board chess_board;
+    chess_board.reset_board();
 
+    // Clear all pieces
+    chess_board.white_pawn = chess_board.black_pawn = 0;
+    chess_board.white_knight = chess_board.black_knight = 0;
+    chess_board.white_bishop = chess_board.black_bishop = 0;
+    chess_board.white_queen = chess_board.black_queen = 0;
+    chess_board.white_rook = chess_board.black_rook = 0;
+    chess_board.white_king = chess_board.black_king = 0;
+
+    // Place only kings and rooks for castling tests
+    chess_board.set_piece(4, 'K');   // White king e1
+    chess_board.set_piece(0, 'R');   // White rook a1
+    chess_board.set_piece(7, 'R');   // White rook h1
+
+    chess_board.set_piece(60, 'k');  // Black king e8
+    chess_board.set_piece(56, 'r');  // Black rook a8
+    chess_board.set_piece(63, 'r');  // Black rook h8
+
+    // --- White castling ---
+    Bitboard white_castles = Piece::castling(true, chess_board);
+
+    Bitboard expected_white = 0;
+    expected_white |= (1ULL << 6);  // g1 (white kingside castle)
+    expected_white |= (1ULL << 2);  // c1 (white queenside castle)
+
+    EXPECT_EQ(white_castles, expected_white);
+
+    // --- Black castling ---
+    Bitboard black_castles = Piece::castling(false, chess_board);
+
+    Bitboard expected_black = 0;
+    expected_black |= (1ULL << 62); // g8 (black kingside castle)
+    expected_black |= (1ULL << 58); // c8 (black queenside castle)
+
+    EXPECT_EQ(black_castles, expected_black);
+}
+TEST(PieceTest, test_castling_with_king_moves) {
+    board chess_board;
+    chess_board.reset_board();
+
+    // Clear all pieces
+    chess_board.white_pawn = chess_board.black_pawn = 0;
+    chess_board.white_knight = chess_board.black_knight = 0;
+    chess_board.white_bishop = chess_board.black_bishop = 0;
+    chess_board.white_queen = chess_board.black_queen = 0;
+    chess_board.white_rook = chess_board.black_rook = 0;
+    chess_board.white_king = chess_board.black_king = 0;
+
+    // Place only kings and rooks for castling tests
+    chess_board.set_piece(4, 'K');   // White king e1
+    chess_board.set_piece(0, 'R');   // White rook a1
+    chess_board.set_piece(7, 'R');   // White rook h1
+
+    chess_board.set_piece(60, 'k');  // Black king e8
+    chess_board.set_piece(56, 'r');  // Black rook a8
+    chess_board.set_piece(63, 'r');  // Black rook h8
+
+    Move move1 = Move(4, 12);
+    chess_board.execute_move(move1);
+    Move move2 = Move(12, 4);
+    chess_board.execute_move(move2);
+
+    // --- White castling ---
+    Bitboard white_castles = Piece::castling(true, chess_board);
+
+    Bitboard expected_white = 0ULL;
+
+    EXPECT_EQ(white_castles, expected_white);
+
+}
+
+TEST(PieceTest, test_castling_with_rook_moves) {
+    board chess_board;
+    chess_board.reset_board();
+
+    // Clear all pieces
+    chess_board.white_pawn = chess_board.black_pawn = 0;
+    chess_board.white_knight = chess_board.black_knight = 0;
+    chess_board.white_bishop = chess_board.black_bishop = 0;
+    chess_board.white_queen = chess_board.black_queen = 0;
+    chess_board.white_rook = chess_board.black_rook = 0;
+    chess_board.white_king = chess_board.black_king = 0;
+
+    // Place only kings and rooks for castling tests
+    chess_board.set_piece(4, 'K');   // White king e1
+    chess_board.set_piece(0, 'R');   // White rook a1
+    chess_board.set_piece(7, 'R');   // White rook h1
+
+    chess_board.set_piece(60, 'k');  // Black king e8
+    chess_board.set_piece(56, 'r');  // Black rook a8
+    chess_board.set_piece(63, 'r');  // Black rook h8
+
+    Move move1 = Move(0, 16);
+    chess_board.execute_move(move1);
+    Move move2 = Move(16, 0);
+    chess_board.execute_move(move2);
+
+    // --- White castling ---
+    Bitboard white_castles = Piece::castling(true, chess_board);
+
+    Bitboard expected_white = 0ULL;
+    expected_white |= (1ULL << 6); //g1
+
+    EXPECT_EQ(white_castles, expected_white);
+
+}
+
+TEST(PieceTest, test_king_moves) { //With castling, without moves
+    board chess_board;
+    chess_board.reset_board();
+
+    // Clear all pieces
+    chess_board.white_pawn = chess_board.black_pawn = 0;
+    chess_board.white_knight = chess_board.black_knight = 0;
+    chess_board.white_bishop = chess_board.black_bishop = 0;
+    chess_board.white_queen = chess_board.black_queen = 0;
+    chess_board.white_rook = chess_board.black_rook = 0;
+    chess_board.white_king = chess_board.black_king = 0;
+
+    // Place only kings and rooks for castling tests
+    chess_board.set_piece(4, 'K');   // White king e1
+    chess_board.set_piece(0, 'R');   // White rook a1
+    chess_board.set_piece(7, 'R');   // White rook h1
+
+    chess_board.set_piece(59, 'r');  // Black rook d8
+
+    // --- White castling ---
+    Bitboard white_castles = Piece::king_moves(4, true, chess_board);
+
+    Bitboard expected_white = 0;
+    expected_white |= (1ULL << 6);  // g1 (white kingside castle)
+    expected_white |= (1ULL << 12);  // e2
+    expected_white |= (1ULL << 13);  // f2
+    expected_white |= (1ULL << 5);  // f1
+
+    EXPECT_EQ(white_castles, expected_white);
+}

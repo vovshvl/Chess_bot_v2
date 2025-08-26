@@ -29,6 +29,12 @@ public:
     uint64_t black_pieces = 0;
     uint64_t all_pieces = 0;
 
+    //Castling flags, when rook or king moves set to false
+    bool king_castle_black = true;
+    bool king_castle_white = true;
+    bool queen_castle_black = true;
+    bool queen_castle_white = true;
+
 
     void init_board() {
         white_pawn = 0x000000000000FF00ULL;
@@ -175,6 +181,53 @@ public:
         char moving_piece = get_piece_at_square(from);
         char captured_piece = get_piece_at_square(to);
 
+        //Castling, so the rook moves too
+        if(moving_piece =='K' and from == 4 and (to == 6 or to==2)){
+            if(to==6){
+                clear_square(7);
+                set_piece(5, 'R');
+            }
+            if(to==2){
+                clear_square(0);
+                set_piece(3, 'R');
+            }
+        }
+        else if (moving_piece =='k' and from == 60 and (to == 58 or to==62)){
+            if(to==62){
+                clear_square(63);
+                set_piece(61, 'r');
+            }
+            if(to==58){
+                clear_square(56);
+                set_piece(59, 'r');
+            }
+        }
+
+        if(moving_piece == 'K'){
+            king_castle_white = false;
+            queen_castle_white = false;
+        }
+        else if(moving_piece == 'k'){
+            king_castle_black = false;
+            queen_castle_black = false;
+        }
+        else if(moving_piece == 'R'){
+            if(from == 0) queen_castle_white = false;
+            if(from == 7) king_castle_white = false;
+        }
+        else if(moving_piece == 'r'){
+            if(from == 56) queen_castle_black = false;
+            if(from == 63) king_castle_black = false;
+        }
+
+        if(captured_piece == 'R'){
+            if(to == 0) queen_castle_white = false;
+            if(to == 7) king_castle_white = false;
+        }
+        else if(captured_piece == 'r'){
+            if(to == 56) queen_castle_black = false;
+            if(to == 63) king_castle_black = false;
+        }
         // Перемещаем фигуру
         clear_square(from);
         set_piece(to, moving_piece);
@@ -227,11 +280,15 @@ void reverse_move(const Move& move) {
 
         }
     };
-    uint8_t get_rank(uint64_t board, int rank) {
+    bool get_king_castle_black() const {return king_castle_black;}
+    bool get_king_castle_white() const {return king_castle_white;}
+    bool get_queen_castle_black() const {return queen_castle_black;}
+    bool get_queen_castle_white() const {return queen_castle_white;}
+    static uint8_t get_rank(uint64_t board, int rank) {
         return (board >> (rank*8)) & 0xFF;
     }
 
-    uint8_t get_file(uint64_t board, int file) {
+    static uint8_t get_file(uint64_t board, int file) {
         uint8_t f = 0;
         for (int r = 0; r < 8; ++r)
             if (board & (1ULL << (r*8 + file))) f |= (1 << r);
@@ -269,7 +326,7 @@ void reverse_move(const Move& move) {
     }
 
 // Convert 8-bit file attack mask back to 64-bit bitboard
-    uint64_t file_to_bitboard(uint8_t file_bits, int file) {
+    static uint64_t file_to_bitboard(uint8_t file_bits, int file) {
         uint64_t bb = 0ULL;
         for (int r = 0; r < 8; r++) {
             if (file_bits & (1 << r)) {
