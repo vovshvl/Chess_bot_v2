@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.31)
 project(chess_bot_new)
 
 set(CMAKE_CXX_STANDARD 20)
-
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 add_executable(chess_bot_new
         Piece.cc
         engine.cc

@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <bit>
 #include "board.hh"
-
+#include <cstdint>
 class OptimizedEvaluator {
 private:
     static constexpr int PAWN_VALUE = 100;
@@ -110,12 +110,12 @@ private:
 
     // Fast popcount using builtin
     static int popcount(uint64_t bb) {
-        return std::popcount(bb);
+        return __builtin_popcountll(bb);
     }
 
     // Get least significant bit
     static int lsb(uint64_t bb) {
-        return std::countr_zero(bb);
+        return __builtin_ctzll(bb);
     }
 
     // Evaluate material and PST for a piece type
@@ -241,7 +241,6 @@ private:
     }
 
 public:
-    // Main evaluation function - returns score from white's perspective
     int evaluate(const board& b) const {
         bool endgame = is_endgame(b);
         int score = 0;
