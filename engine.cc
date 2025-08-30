@@ -153,7 +153,6 @@ private:
         return popcount(heavy_pieces) <= 4; // Queens + rooks <= 4 pieces
     }
 
-    // Ultra-fast material evaluation with unrolled loops
     int evaluate_material(const board& b) const noexcept {
         int score = 0;
 
@@ -172,11 +171,8 @@ private:
         return score;
     }
 
-    // Ultra-fast PST evaluation
     int evaluate_pst(const board& b, bool endgame) const noexcept {
         int score = 0;
-
-        // White pieces PST
         uint64_t pieces = b.get_white_pawns();
         while (pieces) {
             score += PAWN_PST[lsb(pieces)];
@@ -206,14 +202,11 @@ private:
             score += QUEEN_PST[lsb(pieces)];
             pieces = clear_lsb(pieces);
         }
-
-        // White king
         pieces = b.get_white_king();
         if (pieces) {
             score += endgame ? KING_EG_PST[lsb(pieces)] : KING_MG_PST[lsb(pieces)];
         }
 
-        // Black pieces PST (flipped)
         pieces = b.get_black_pawns();
         while (pieces) {
             score -= PAWN_PST[lsb(pieces) ^ 56];
@@ -244,7 +237,6 @@ private:
             pieces = clear_lsb(pieces);
         }
 
-        // Black king
         pieces = b.get_black_king();
         if (pieces) {
             score -= endgame ? KING_EG_PST[lsb(pieces) ^ 56] : KING_MG_PST[lsb(pieces) ^ 56];
@@ -279,7 +271,6 @@ private:
         return score;
     }
 
-    // NEW: Ultra-fast king safety evaluation
     int evaluate_king_safety(const board& b, bool endgame) const noexcept {
         if (endgame) return 0;
 
@@ -348,12 +339,10 @@ public:
         score += evaluate_piece_bonuses(b);
         score += evaluate_king_safety(b, endgame);
 
-        // Skip complex evaluations for maximum speed
         if (!endgame) {
             score += evaluate_pawn_structure(b);
         }
 
-        // Tempo
         score += white_to_move ? 10 : -10;
 
         return white_to_move ? score : -score;
