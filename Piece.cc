@@ -1,8 +1,40 @@
-
-#include <array>
 #include <vector>
 #include <algorithm>
 #include "board.hh"
+#include <cstdint>
+#include <bit>
+//fixed implementation to avoid undefined behavior
+class BitUtils {
+public:
+    static inline int popcount(uint64_t bb) noexcept {
+#if __cpp_lib_bitops >= 201907L
+        return std::popcount(bb);
+#else
+        return __builtin_popcountll(bb);
+#endif
+    }
+
+
+    static inline int lsb(uint64_t bb) noexcept {
+        if (bb == 0) return -1;
+#if __cpp_lib_bitops >= 201907L
+        return std::countr_zero(bb);
+#else
+        return __builtin_ctzll(bb);
+#endif
+    }
+
+
+    static inline int msb(uint64_t bb) noexcept {
+        if (bb == 0) return -1;
+#if __cpp_lib_bitops >= 201907L
+        return 63 - std::countl_zero(bb);
+#else
+        return 63 - __builtin_clzll(bb);
+#endif
+    }
+};
+
 
 class Piece {
 private:
@@ -96,7 +128,7 @@ public:
             // Adjust for color: uppercase if white, lowercase if black
             char final_char = is_white ? tolower(piece_char) : toupper(piece_char);
             while (bb) {
-                int from_sq = __builtin_ctzll(bb); // index of LS1B
+                int from_sq = BitUtils::lsb(bb); // index of LS1B
                 result.push_back({from_sq, final_char});
                 bb &= bb - 1; // clear LS1B
             }
@@ -257,17 +289,17 @@ public:
 
         return all_moves;
     }
-    static bool is_in_check(const board& board, bool white){
-        int king_square;
-        if(white){
+    static bool is_in_check(const board& board, bool white) {
+        int king_square =-1;
+        if (white) {
             Bitboard wk = board.get_white_king();
-            king_square=__builtin_ctzll(wk);
-        }
-        else{
+            king_square = BitUtils::lsb(wk);
+        } else {
             Bitboard bk = board.get_black_king();
-            king_square=__builtin_ctzll(bk);
+            king_square = BitUtils::lsb(bk);
         }
-        return is_attacked(board, king_square,white);
+        if (king_square == -1) return false;
+        return is_attacked(board, king_square, white);
     }
     static bool is_mate(const board& board, bool is_white){
         if(is_in_check(board, is_white)){
@@ -282,14 +314,15 @@ public:
     static std::vector<int> bitboard_to_array(Bitboard bb) {
         std::vector<int> squares;
         while (bb) {
-            int sq = __builtin_ctzll(bb);
+            int sq = BitUtils::lsb(bb);
+            if (sq == -1) break;
             squares.push_back(sq);
             bb &= bb - 1;
         }
         return squares;
     }
     static int get_square_by_bitboard(Bitboard bb) {
-        return  __builtin_ctzll(bb);
+        return BitUtils::lsb(bb);
     }
 
     static Bitboard pawn_attacks(int sq, bool is_white) {
