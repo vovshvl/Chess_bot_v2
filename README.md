@@ -14,4 +14,4 @@
    - checkmask legal moves
 9) Checkmate ✅
 10) ALPHA-BETA pruning ❌
-11) Evaluate Board ❌
+11) Evaluate Board ✅(Further optimization is possible but not needed)
