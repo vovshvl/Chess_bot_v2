@@ -70,7 +70,7 @@ public:
 
 };
 
-int main() {
+int minmaxBenchmark() {
     MinmaxBenchmark benchmark;
 
     Minmax minimax;         // local
