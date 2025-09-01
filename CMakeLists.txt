@@ -10,6 +10,8 @@ add_executable(chess_bot_new
         main.cc
         Move.cc
         ChessGameDemo.hh
+        BestMove.hh
+        tests/MinmaxBenchmark.cc
 )
 
 enable_testing()
@@ -30,6 +32,7 @@ add_executable(chessbot_tests
         board.cc
         Move.cc
         ChessGameDemo.cc
+        tests/MinmaxBenchmark.cc
 )
 
 target_link_libraries(chessbot_tests

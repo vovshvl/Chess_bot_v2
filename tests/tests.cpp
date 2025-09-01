@@ -3,8 +3,8 @@
 //
 #include <gtest/gtest.h>
 #include "../board.hh"
-#include "../Piece.cc"
 #include "../Move.hh"
+#include "../BestMove.hh"
 
 using Bitboard = uint64_t;
 
@@ -53,7 +53,7 @@ TEST(BoardTest, test_demogame){
 
     };
     for (const auto& move : demo_moves){
-        chess_board.execute_move(move);
+        chess_board.execute_move(move.get_from_square(), move.get_to_square());
     }
     //dumb test
     //Italian game test
@@ -80,8 +80,7 @@ TEST(BoardTest, test_move){
 
     board chess_board_before=chess_board;
 
-    Move move1 = Move(12, 28);
-    chess_board.execute_move(move1);
+    chess_board.execute_move(12,28);
 
     for(int i=0; i<64; ++i){
         if(i==12){ EXPECT_EQ(chess_board.get_piece_at_square(i), '.'); }
@@ -482,10 +481,9 @@ TEST(PieceTest, test_castling_with_king_moves) {
     chess_board.set_piece(56, 'r');  // Black rook a8
     chess_board.set_piece(63, 'r');  // Black rook h8
 
-    Move move1 = Move(4, 12);
-    chess_board.execute_move(move1);
-    Move move2 = Move(12, 4);
-    chess_board.execute_move(move2);
+
+    chess_board.execute_move(4,12);
+    chess_board.execute_move(12,4);
 
     // --- White castling ---
     Bitboard white_castles = Piece::castling(true, chess_board);
@@ -517,10 +515,8 @@ TEST(PieceTest, test_castling_with_rook_moves) {
     chess_board.set_piece(56, 'r');  // Black rook a8
     chess_board.set_piece(63, 'r');  // Black rook h8
 
-    Move move1 = Move(0, 16);
-    chess_board.execute_move(move1);
-    Move move2 = Move(16, 0);
-    chess_board.execute_move(move2);
+    chess_board.execute_move(0,16);
+    chess_board.execute_move(16,0);
 
     // --- White castling ---
     Bitboard white_castles = Piece::castling(true, chess_board);
@@ -562,3 +558,39 @@ TEST(PieceTest, test_king_moves) { //With castling, without moves
 
     EXPECT_EQ(white_castles, expected_white);
 }
+TEST(BestMoveTest, test_opening_move) {
+    board chess_board;
+    chess_board.init_board();
+    Minmax minimax;
+    Evaluator eval;
+
+    auto best_move = minimax.find_best_move(chess_board, 5, true, eval);
+
+    // In the initial position, e2-e4 or d2-d4 is likely best. Check that
+    // the returned move is in a set of reasonable opening moves
+    std::vector<std::pair<int,int>> expected_moves = {
+            {12, 28}, // e2-e4
+            {12, 20}, // e2-e3
+            {13, 29}, // d2-d4
+            {13, 21}  // d2-d3
+    };
+
+    EXPECT_TRUE(std::find(expected_moves.begin(), expected_moves.end(), best_move) != expected_moves.end());
+}
+
+TEST(BestMoveTest, test_opening_moves_black) {
+    board chess_board;
+    chess_board.init_board();
+    Minmax minimax;
+    Evaluator eval;
+
+    chess_board.execute_move(12, 28);
+
+    auto best_move = minimax.find_best_move(chess_board, 4, false, eval);
+
+    // Black's best moves in response to standard openings
+    std::pair<int,int> expected_move = {50, 42};
+
+    EXPECT_EQ(best_move, expected_move);
+}
+

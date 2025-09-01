@@ -174,10 +174,7 @@ public:
 
         init_board();
     }
-    void execute_move(const Move& move) {
-        int from = move.get_from_square();
-        int to = move.get_to_square();
-
+    void execute_move(int from, int to) {
         char moving_piece = get_piece_at_square(from);
         char captured_piece = get_piece_at_square(to);
 
@@ -232,11 +229,8 @@ public:
         clear_square(from);
         set_piece(to, moving_piece);
     }
-void reverse_move(const Move& move) {
-    int from = move.get_from_square();
-    int to = move.get_to_square();
+void reverse_move(int from, int to, char captured_piece) {
     char moving_piece = get_piece_at_square(to);
-    char captured_piece = move.get_captured_piece();
 
     clear_square(to);
     set_piece(from, moving_piece);

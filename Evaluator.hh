@@ -345,9 +345,9 @@ public:
             score += evaluate_pawn_structure(b);
         }
 
-        score += white_to_move ? 10 : -10;
+        score += 10;
 
-        return white_to_move ? score : -score;
+        return score;
     }
 };
 
