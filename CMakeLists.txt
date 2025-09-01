@@ -32,7 +32,6 @@ add_executable(chessbot_tests
         board.cc
         Move.cc
         ChessGameDemo.cc
-        tests/MinmaxBenchmark.cc
 )
 
 target_link_libraries(chessbot_tests
