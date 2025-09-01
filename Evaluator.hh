@@ -7,19 +7,16 @@
 #define CHESS_BOT_NEW_ENGINE_HH
 #include <array>
 #include <algorithm>
-#include <bit>
 #include "board.hh"
 #include <cstdint>
 
-class UltraFastEvaluator {
+class Evaluator {
 private:
     static constexpr int PAWN_VALUE = 100;
     static constexpr int KNIGHT_VALUE = 320;
     static constexpr int BISHOP_VALUE = 330;
     static constexpr int ROOK_VALUE = 500;
     static constexpr int QUEEN_VALUE = 900;
-
-    // Compressed piece-square tables (only store first half, flip for black)
     static constexpr std::array<int16_t, 64> PAWN_PST = {
          0,  0,  0,  0,  0,  0,  0,  0,
         78, 83, 86, 73, 102, 82, 85, 90,
@@ -162,8 +159,6 @@ private:
 
     int evaluate_material(const board& b) const noexcept {
         int score = 0;
-
-        // Material counting - single operations
         score += popcount(b.get_white_pawns()) * PAWN_VALUE;
         score -= popcount(b.get_black_pawns()) * PAWN_VALUE;
         score += popcount(b.get_white_knights()) * KNIGHT_VALUE;

@@ -4,7 +4,7 @@
 #include <random>
 #include <thread>
 #include "../board.hh"
-#include "../engine.cc"
+#include "../Evaluator.cc"
 
 class ChessBenchmark {
 private:

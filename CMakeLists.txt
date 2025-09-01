@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 add_executable(chess_bot_new
         Piece.cc
-        engine.cc
+        Evaluator.cc
         main.cc
         Move.cc
         ChessGameDemo.hh
@@ -26,7 +26,7 @@ FetchContent_MakeAvailable(googletest)
 add_executable(chessbot_tests
         tests/tests.cpp
         Piece.cc
-        engine.cc
+        Evaluator.cc
         board.cc
         Move.cc
         ChessGameDemo.cc
