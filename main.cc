@@ -1,7 +1,8 @@
-#include "tests/Benchmarks.cc"
-#include "tests/MinmaxBenchmark.cc"
+int Benchmark();
+int minmaxBenchmark();
+
 
 int main() {
-    Benchmark();
     minmaxBenchmark();
+    return 0;
 }

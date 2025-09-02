@@ -3,7 +3,7 @@
 #include <vector>
 #include <iomanip>
 #include "../board.hh"
-#include "../Evaluator.cc"
+#include "../Evaluator.hh"
 #include "../BestMove.hh" // contains Minmax and find_best_move_benchmark
 
 class MinmaxBenchmark {

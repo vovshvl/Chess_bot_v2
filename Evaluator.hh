@@ -350,5 +350,7 @@ public:
         return score;
     }
 };
+extern Evaluator g_ultra_evaluator;
+int evaluate_position(const board& b, bool white_to_move = true) noexcept;
 
 #endif //CHESS_BOT_NEW_ENGINE_HH
