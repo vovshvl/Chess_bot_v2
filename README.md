@@ -13,5 +13,6 @@
 7) Total legal moves ⚠️
    - checkmask legal moves
 9) Checkmate ✅
-10) ALPHA-BETA pruning ❌
-11) Evaluate Board ✅(Further optimization is possible but not needed)
+10) ALPHA-BETA pruning ⚠️
+    - works, but need move sorting(check, captures, development)
+12) Evaluate Board ✅(Further optimization is possible but not needed)
