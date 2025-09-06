@@ -527,4 +527,9 @@ public:
     static Bitboard is_defended(int sq, bool is_white,const board& chess_board) {
         return is_attacked(chess_board, sq,!is_white);
     }
+
+    static void sort_moves(std::vector<std::pair<int,int>>& moves, const board& board, bool is_white){
+        std::vector<std::pair<int,int>> sorted_moves; //Prioritize check, captures, development?
+
+    }
 };

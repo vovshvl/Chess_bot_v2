@@ -18,11 +18,9 @@ struct move_record { //for undo
 class Minmax{
     using Bitboard = uint64_t;
 public:
-
-    int maxDepth;
     static constexpr int oo = std::numeric_limits<int>::max();
 
-    int minmax(board& board, int depth, bool white_to_move, const Evaluator& eval){
+    int minmax(board& board, int depth, bool white_to_move, const Evaluator& eval, int alpha, int beta){//with alphabeta prunning
 
         Piece piece;
         if(depth ==0)return eval.evaluate(board, white_to_move);
@@ -34,19 +32,23 @@ public:
             char captured_piece = board.get_piece_at_square(to);
             board.execute_move(from, to);
 
-            int score = minmax(board, depth-1, !white_to_move, eval);
+            int score = minmax(board, depth - 1, !white_to_move, eval, alpha, beta);
 
             board.reverse_move(from, to, captured_piece);
+
             if (white_to_move) {
                 if (score > best_score) best_score = score;
+                if (best_score > alpha) alpha = best_score;
             } else {
                 if (score < best_score) best_score = score;
+                if (best_score < beta) beta = best_score;
             }
+            if (alpha >= beta) break;
         }
         return best_score;
     }
 
-    std::pair<int,int> find_best_move(board& b, int depth, bool white_to_move, const Evaluator& eval){
+    std::pair<int,int> find_best_move(board& b, int depth, bool white_to_move, const Evaluator& eval, int alpha, int beta){
         auto moves = Piece::legal_moves(b, white_to_move);
         int best_score = white_to_move ? std::numeric_limits<int>::min()
                                        : std::numeric_limits<int>::max();
@@ -56,7 +58,7 @@ public:
             char captured_piece = b.get_piece_at_square(to);
             b.execute_move(from, to);
 
-            int score = minmax(b, depth - 1, !white_to_move, eval);
+            int score = minmax(b, depth - 1, !white_to_move, eval, alpha, beta);
             b.reverse_move(from, to, captured_piece);
 
             if (white_to_move) {
@@ -64,18 +66,21 @@ public:
                     best_score = score;
                     best_move = {from, to};
                 }
+                if (best_score > alpha) alpha = best_score;
             } else {
                 if (score < best_score) {
                     best_score = score;
                     best_move = {from, to};
                 }
+                if (best_score < beta) beta = best_score;
             }
+            if (alpha >= beta) break;
         }
 
         return best_move;
     }
 
-    // Benchmark minmax with counter
+    // Benchmark minmax_with_alphabeta with counter
     int minmax_benchmark(board& b, int depth, bool white_to_move,
                          const Evaluator& eval, long long& counter) {
         if (depth == 0) {
