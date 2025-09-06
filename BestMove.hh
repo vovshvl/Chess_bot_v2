@@ -20,7 +20,7 @@ class Minmax{
 public:
     static constexpr int oo = std::numeric_limits<int>::max();
 
-    int minmax(board& board, int depth, bool white_to_move, const Evaluator& eval, int alpha, int beta){//with alphabeta prunning
+    int minmax(board& board, int depth, bool white_to_move, const Evaluator& eval, int alpha=-oo, int beta=oo){//with alphabeta prunning
 
         Piece piece;
         if(depth ==0)return eval.evaluate(board, white_to_move);
@@ -48,7 +48,7 @@ public:
         return best_score;
     }
 
-    std::pair<int,int> find_best_move(board& b, int depth, bool white_to_move, const Evaluator& eval, int alpha, int beta){
+    std::pair<int,int> find_best_move(board& b, int depth, bool white_to_move, const Evaluator& eval, int alpha = -oo, int beta=oo){
         auto moves = Piece::legal_moves(b, white_to_move);
         int best_score = white_to_move ? std::numeric_limits<int>::min()
                                        : std::numeric_limits<int>::max();
