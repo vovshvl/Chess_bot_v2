@@ -27,6 +27,7 @@ public:
 
         int best_score = white_to_move? -oo : oo;
         auto moves = piece.legal_moves(board, white_to_move);
+        Piece::sort_moves(moves, board, white_to_move);
 
         for(auto[from, to]:moves) {
             char captured_piece = board.get_piece_at_square(to);
@@ -50,6 +51,7 @@ public:
 
     std::pair<int,int> find_best_move(board& b, int depth, bool white_to_move, const Evaluator& eval, int alpha = -oo, int beta=oo){
         auto moves = Piece::legal_moves(b, white_to_move);
+        Piece::sort_moves(moves, b, white_to_move);
         int best_score = white_to_move ? std::numeric_limits<int>::min()
                                        : std::numeric_limits<int>::max();
         std::pair<int,int> best_move = {-1,-1};
@@ -79,51 +81,62 @@ public:
 
         return best_move;
     }
-
     // Benchmark minmax_with_alphabeta with counter
     int minmax_benchmark(board& b, int depth, bool white_to_move,
-                         const Evaluator& eval, long long& counter) {
+                         const Evaluator& eval, long long& counter,
+                         int alpha = -oo, int beta = oo) {
+
         if (depth == 0) {
             counter++;  // count evaluated leaf node
             return eval.evaluate(b, white_to_move);
         }
 
         auto moves = Piece::legal_moves(b, white_to_move);
+        Piece::sort_moves(moves, b, white_to_move);  // sort moves for better pruning
+
         if (moves.empty()) {
             counter++;
             return eval.evaluate(b, white_to_move);
         }
 
-        int best_score = white_to_move ? std::numeric_limits<int>::min()
-                                       : std::numeric_limits<int>::max();
+        int best_score = white_to_move ? -oo : oo;
 
         for (auto [from, to] : moves) {
             char captured_piece = b.get_piece_at_square(to);
             b.execute_move(from, to);
-            int score = minmax_benchmark(b, depth - 1, !white_to_move, eval, counter);
-            b.reverse_move(from, to,captured_piece);
+
+            int score = minmax_benchmark(b, depth - 1, !white_to_move, eval, counter, alpha, beta);
+
+            b.reverse_move(from, to, captured_piece);
 
             if (white_to_move) {
                 if (score > best_score) best_score = score;
+                if (best_score > alpha) alpha = best_score;
             } else {
                 if (score < best_score) best_score = score;
+                if (best_score < beta) beta = best_score;
             }
+            if (alpha >= beta) break;  // pruning
         }
 
         return best_score;
     }
 
     std::pair<int,int> find_best_move_benchmark(board& b, int depth, bool white_to_move,
-                                                const Evaluator& eval, long long& counter) {
+                                                const Evaluator& eval, long long& counter,
+                                                int alpha = -oo, int beta = oo) {
         auto moves = Piece::legal_moves(b, white_to_move);
-        int best_score = white_to_move ? std::numeric_limits<int>::min()
-                                       : std::numeric_limits<int>::max();
+        Piece::sort_moves(moves, b, white_to_move);  // sort moves
+
+        int best_score = white_to_move ? -oo : oo;
         std::pair<int,int> best_move = {-1,-1};
 
         for (auto [from, to] : moves) {
             char captured_piece = b.get_piece_at_square(to);
             b.execute_move(from, to);
-            int score = minmax_benchmark(b, depth - 1, !white_to_move, eval, counter);
+
+            int score = minmax_benchmark(b, depth - 1, !white_to_move, eval, counter, alpha, beta);
+
             b.reverse_move(from, to, captured_piece);
 
             if (white_to_move) {
@@ -131,16 +144,20 @@ public:
                     best_score = score;
                     best_move = {from, to};
                 }
+                if (best_score > alpha) alpha = best_score;
             } else {
                 if (score < best_score) {
                     best_score = score;
                     best_move = {from, to};
                 }
+                if (best_score < beta) beta = best_score;
             }
+            if (alpha >= beta) break;  // pruning
         }
 
         return best_move;
     }
+
 
 };
 #endif // BESTMOVE_HH

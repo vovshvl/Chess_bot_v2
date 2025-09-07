@@ -78,7 +78,7 @@ int minmaxBenchmark() {
     test_board.init_board();
     Evaluator eval;
 
-    std::vector<int> depths = {1, 2, 3, 4, 5};
+    std::vector<int> depths = {1, 2, 3, 4, 5, 6, 7};
     auto results = benchmark.run_depth_benchmarks(minimax, test_board, eval, depths);
     benchmark.print_results(results);
 

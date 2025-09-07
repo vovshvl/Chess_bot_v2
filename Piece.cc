@@ -528,8 +528,59 @@ public:
         return is_attacked(chess_board, sq,!is_white);
     }
 
-    static void sort_moves(std::vector<std::pair<int,int>>& moves, const board& board, bool is_white){
-        std::vector<std::pair<int,int>> sorted_moves; //Prioritize check, captures, development?
+    static void sort_moves(std::vector<std::pair<int,int>>& moves, board& board, bool is_white){
+        auto piece_value = [](char piece) -> int {
+            switch(toupper(piece)) {
+                case 'P': return 100;
+                case 'N': return 320;
+                case 'B': return 330;
+                case 'R': return 500;
+                case 'Q': return 900;
+                case 'K': return 10000;
+                case '.': return 0;
+            }
+            return 0;
+        };
+        auto attcker_bitboard = [](char piece, int to, bool is_white, class board& board) -> Bitboard {
+            switch(toupper(piece)) {
+                case 'P': return pawn_attacks(to, is_white);
+                case 'N': return knight_attacks(to);
+                case 'B': return bishop_attacks(to, is_white, board);
+                case 'R': return rook_attacks(to, board);
+                case 'Q': return queen_attacks(to, is_white, board);
+            }
+            return 0;
+        };
 
+
+        std::vector<std::pair<std::pair<int,int>, int>> scored_moves; //Prioritize check, captures, development?
+        Bitboard enemy_king = is_white? board.get_black_king() : board.get_white_king();
+
+        for(auto move : moves){
+            int from = move.first;
+            int to = move.second;
+            char captured_piece = board.get_piece_at_square(to);
+            char moving_piece = board.get_piece_at_square(from);
+            int score = 0;
+
+            //board.execute_move(from, to);
+            //if(is_in_check(board, !is_white)) score+=100;
+            //board.reverse_move(from, to, captured_piece);
+
+
+            if(attcker_bitboard(moving_piece, to, is_white, board) & enemy_king) score +=100;
+
+
+            if(captured_piece != '.'){
+                score = piece_value(captured_piece)*10 - piece_value(moving_piece);
+            }
+
+
+            scored_moves.push_back({move, score});
+        }
+        std::sort(scored_moves.begin(), scored_moves.end(),
+                  [](auto a, auto b){ return a.second > b.second; });
+        moves.clear();
+        for (auto& m : scored_moves) moves.push_back(m.first);
     }
 };
