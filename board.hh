@@ -174,7 +174,7 @@ public:
 
         init_board();
     }
-    void execute_move(int from, int to) {
+    void execute_move(int from, int to, char promotion) {
         char moving_piece = get_piece_at_square(from);
         char captured_piece = get_piece_at_square(to);
 
@@ -225,9 +225,18 @@ public:
             if(to == 56) queen_castle_black = false;
             if(to == 63) king_castle_black = false;
         }
-        // Перемещаем фигуру
+
         clear_square(from);
-        set_piece(to, moving_piece);
+        if(promotion != '\0'){
+            // Pawn promotion
+            set_piece(to, (isupper(moving_piece) ? toupper(promotion) : tolower(promotion)));
+        } else {
+            // Normal move
+            set_piece(to, moving_piece);
+        }
+
+
+
     }
 void reverse_move(int from, int to, char captured_piece) {
     char moving_piece = get_piece_at_square(to);

@@ -1,7 +1,7 @@
 #pragma once
 #include <optional>
 
-class Move {
+class Move_class {
 private:
     int from_square;
     int to_square;
@@ -15,7 +15,7 @@ private:
 
 public:
     // Konstruktor
-    Move(int from_square,
+    Move_class(int from_square,
          int to_square,
          std::optional<char> piece_captured = std::nullopt,
          std::optional<char> promotion = std::nullopt,

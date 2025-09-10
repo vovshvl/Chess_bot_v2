@@ -53,7 +53,7 @@ TEST(BoardTest, test_demogame){
 
     };
     for (const auto& move : demo_moves){
-        chess_board.execute_move(move.get_from_square(), move.get_to_square());
+        chess_board.execute_move(move.from, move.to, '\0');
     }
     //dumb test
     //Italian game test
@@ -80,7 +80,7 @@ TEST(BoardTest, test_move){
 
     board chess_board_before=chess_board;
 
-    chess_board.execute_move(12,28);
+    chess_board.execute_move(12,28, '\0');
 
     for(int i=0; i<64; ++i){
         if(i==12){ EXPECT_EQ(chess_board.get_piece_at_square(i), '.'); }
@@ -316,10 +316,10 @@ TEST(PieceTest, test_legal_moves_single_check_without_block) {
     // Black king on h8 (square 63)
     chess_board.set_piece(63, 'k');
 
-    std::vector<std::pair<int,int>> white_legal_moves = Piece::legal_moves(chess_board, true);
+    std::vector<Move> white_legal_moves = Piece::legal_moves(chess_board, true);
 
-    std::vector<std::pair<int,int>> expected_moves = {
-            {4, 5}, {4, 11}, {4, 13},
+    std::vector<Move> expected_moves = {
+            {4, 5, '\0'}, {4, 11, '\0'}, {4, 13, '\0'},
     };
 
     std::sort(white_legal_moves.begin(), white_legal_moves.end());
@@ -349,10 +349,10 @@ TEST(PieceTest, test_legal_moves_single_check_with_block) {
     // Black king on h8 (square 63)
     chess_board.set_piece(63, 'k');
 
-    std::vector<std::pair<int,int>> white_legal_moves = Piece::legal_moves(chess_board, true);
+    std::vector<Move> white_legal_moves = Piece::legal_moves(chess_board, true);
 
-    std::vector<std::pair<int,int>> expected_moves = {
-            {4, 3}, {4, 5}, {4, 13}, {11, 12}
+    std::vector<Move> expected_moves = {
+            {4, 3, '\0'}, {4, 5,  '\0'}, {4, 13,  '\0'}, {11, 12,  '\0'}
     };
 
     std::sort(white_legal_moves.begin(), white_legal_moves.end());
@@ -384,9 +384,9 @@ TEST(PieceTest, test_legal_moves_double_check_with_block) {
     // Black king on h8 (square 63)
     chess_board.set_piece(63, 'k');
 
-    std::vector<std::pair<int,int>> white_legal_moves = Piece::legal_moves(chess_board, true);
+    std::vector<Move> white_legal_moves = Piece::legal_moves(chess_board, true);
 
-    std::vector<std::pair<int,int>> expected_moves = {
+    std::vector<Move> expected_moves = {
             {4, 3}, {4, 5}
     };
 
@@ -482,8 +482,8 @@ TEST(PieceTest, test_castling_with_king_moves) {
     chess_board.set_piece(63, 'r');  // Black rook h8
 
 
-    chess_board.execute_move(4,12);
-    chess_board.execute_move(12,4);
+    chess_board.execute_move(4,12,  '\0');
+    chess_board.execute_move(12,4,  '\0');
 
     // --- White castling ---
     Bitboard white_castles = Piece::castling(true, chess_board);
@@ -515,8 +515,8 @@ TEST(PieceTest, test_castling_with_rook_moves) {
     chess_board.set_piece(56, 'r');  // Black rook a8
     chess_board.set_piece(63, 'r');  // Black rook h8
 
-    chess_board.execute_move(0,16);
-    chess_board.execute_move(16,0);
+    chess_board.execute_move(0,16,  '\0');
+    chess_board.execute_move(16,0,  '\0');
 
     // --- White castling ---
     Bitboard white_castles = Piece::castling(true, chess_board);
@@ -558,6 +558,84 @@ TEST(PieceTest, test_king_moves) { //With castling, without moves
 
     EXPECT_EQ(white_castles, expected_white);
 }
+
+TEST(PieceTest, test_white_promotion){
+    board chess_board;
+    chess_board.reset_board();
+    Minmax minimax;
+    Evaluator eval;
+
+    // Clear all pieces
+    chess_board.white_pawn = chess_board.black_pawn = 0;
+    chess_board.white_knight = chess_board.black_knight = 0;
+    chess_board.white_bishop = chess_board.black_bishop = 0;
+    chess_board.white_queen = chess_board.black_queen = 0;
+    chess_board.white_rook = chess_board.black_rook = 0;
+    chess_board.white_king = chess_board.black_king = 0;
+
+    // Place only kings and rooks for castling tests
+    chess_board.set_piece(4, 'K');   // White king e1
+    chess_board.set_piece(55, 'k');   // Black king h7
+    chess_board.set_piece(49, 'P');   // White pawn b7
+
+    auto best_move = minimax.find_best_move(chess_board, 5, true, eval);
+    Move expected_move= {49, 57, 'q'};
+    EXPECT_EQ(best_move, expected_move);
+}
+
+TEST(PieceTest, test_black_promotion){
+    board chess_board;
+    chess_board.reset_board();
+    Minmax minimax;
+    Evaluator eval;
+
+    // Clear all pieces
+    chess_board.white_pawn = chess_board.black_pawn = 0;
+    chess_board.white_knight = chess_board.black_knight = 0;
+    chess_board.white_bishop = chess_board.black_bishop = 0;
+    chess_board.white_queen = chess_board.black_queen = 0;
+    chess_board.white_rook = chess_board.black_rook = 0;
+    chess_board.white_king = chess_board.black_king = 0;
+
+    // Place only kings and rooks for castling tests
+    chess_board.set_piece(4, 'K');   // White king e1
+    chess_board.set_piece(55, 'k');   // Black king h7
+    chess_board.set_piece(8, 'p');   // Black pawn a2
+
+    auto best_move = minimax.find_best_move(chess_board, 5, false, eval);
+    Move expected_move= {8, 0, 'q'};
+    EXPECT_EQ(best_move, expected_move);
+}
+
+TEST(PieceTest, test_white_underpromotion){
+    board chess_board;
+    chess_board.reset_board();
+    Minmax minimax;
+    Evaluator eval;
+
+    // Clear all pieces
+    chess_board.white_pawn = chess_board.black_pawn = 0;
+    chess_board.white_knight = chess_board.black_knight = 0;
+    chess_board.white_bishop = chess_board.black_bishop = 0;
+    chess_board.white_queen = chess_board.black_queen = 0;
+    chess_board.white_rook = chess_board.black_rook = 0;
+    chess_board.white_king = chess_board.black_king = 0;
+
+    // Place only kings and rooks for castling tests
+    chess_board.set_piece(4, 'K');   // White king e1
+    chess_board.set_piece(55, 'k');   // Black king h7
+    chess_board.set_piece(53, 'P');   // White pawn f7
+    chess_board.set_piece(46, 'p');   // Black pawn g6
+    chess_board.set_piece(47, 'p');   // Black pawn h6
+    chess_board.set_piece(54, 'p');   // Black pawn g7
+    chess_board.set_piece(62, 'p');   // Black pawn g8
+    chess_board.set_piece(63, 'p');   // Black pawn h8
+
+    auto best_move = minimax.find_best_move(chess_board, 5, true, eval);
+    Move expected_move= {53, 61, 'n'};
+    EXPECT_EQ(best_move, expected_move);
+}
+
 TEST(BestMoveTest, test_opening_move) {
     board chess_board;
     chess_board.init_board();
@@ -568,7 +646,7 @@ TEST(BestMoveTest, test_opening_move) {
 
     // In the initial position, e2-e4 or d2-d4 is likely best. Check that
     // the returned move is in a set of reasonable opening moves
-    std::vector<std::pair<int,int>> expected_moves = {
+    std::vector<Move> expected_moves = {
             {12, 28}, // e2-e4
             {12, 20}, // e2-e3
             {13, 29}, // d2-d4
@@ -584,12 +662,12 @@ TEST(BestMoveTest, test_opening_moves_black) {
     Minmax minimax;
     Evaluator eval;
 
-    chess_board.execute_move(12, 28);
+    chess_board.execute_move(12, 28,  '\0');
 
     auto best_move = minimax.find_best_move(chess_board, 4, false, eval);
 
     // Black's best moves in response to standard openings
-    std::pair<int,int> expected_move = {50, 42};
+    Move expected_move = {50, 42};
 
     EXPECT_EQ(best_move, expected_move);
 }

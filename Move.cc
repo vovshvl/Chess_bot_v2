@@ -6,7 +6,7 @@
 #include "Move.hh"
 
 
-    Move::Move(int from_square,
+    Move_class::Move_class(int from_square,
          int to_square,
          std::optional<char> piece_captured,
          std::optional<char> promotion,
@@ -24,10 +24,10 @@
           check(check),
           move_score(0) {}
 
-    int Move::get_from_square() const { return from_square; }
-    int Move::get_to_square() const { return to_square; }
+    int Move_class::get_from_square() const { return from_square; }
+    int Move_class::get_to_square() const { return to_square; }
 
-    void Move::give_move_score() {
+    void Move_class::give_move_score() {
         if (check.has_value() && check.value()) {
             move_score += 1000;
         }
@@ -36,4 +36,4 @@
         }
     }
 
-    int Move::get_move_score() const { return move_score; }
+    int Move_class::get_move_score() const { return move_score; }

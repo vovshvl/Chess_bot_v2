@@ -43,8 +43,8 @@ private:
 
     // Выполнить ход на доске
     void execute_move(const Move& move) {
-        int from = move.get_from_square();
-        int to = move.get_to_square();
+        int from = move.from;
+        int to = move.to;
 
         char moving_piece = chess_board.get_piece_at_square(from);
         char captured_piece = chess_board.get_piece_at_square(to);
@@ -62,8 +62,8 @@ private:
 
     void print_move_info(const Move& move, char moving_piece, char captured_piece) {
         std::string color = white_to_move ? "White" : "Black";
-        std::string from_notation = square_to_notation(move.get_from_square());
-        std::string to_notation = square_to_notation(move.get_to_square());
+        std::string from_notation = square_to_notation(move.from);
+        std::string to_notation = square_to_notation(move.to);
         std::string piece_name = get_piece_name(moving_piece);
 
         std::cout << "\n" << move_number << ". " << color << ": ";
@@ -177,8 +177,8 @@ public:
         for (size_t i = 0; i < move_history.size(); i++) {
             const Move& move = move_history[i];
             std::string color = (i % 2 == 0) ? "White" : "Black";
-            std::string from = square_to_notation(move.get_from_square());
-            std::string to = square_to_notation(move.get_to_square());
+            std::string from = square_to_notation(move.from);
+            std::string to = square_to_notation(move.to);
 
             if (i % 2 == 0) {
                 std::cout << (i / 2 + 1) << ". ";
