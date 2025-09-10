@@ -8,7 +8,7 @@
 2) Legal moves for each piece ✅
 3) Castling ✅
 4) En passant ❌
-5) Pawn promotion ❌
+5) Pawn promotion ✅
 6) Rework Move and piece ❌
 7) Total legal moves ⚠️
    - checkmask legal moves
@@ -16,3 +16,4 @@
 10) ALPHA-BETA pruning ⚠️
     - works, but need move sorting(check, captures, development)
 12) Evaluate Board ✅(Further optimization is possible but not needed)
+13) reverse move fix(in cases of castling, promotion etc.)
