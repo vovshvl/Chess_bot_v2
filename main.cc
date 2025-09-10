@@ -1,8 +1,9 @@
 int Benchmark();
 int minmaxBenchmark();
-
+int game();
 
 int main() {
-    minmaxBenchmark();
+    //minmaxBenchmark();
+    game();
     return 0;
 }

@@ -1,6 +1,7 @@
 #include <vector>
 #include <algorithm>
 #include "board.hh"
+#include "Evaluator.hh"
 #include <cstdint>
 #include <bit>
 //fixed implementation to avoid undefined behavior
@@ -45,23 +46,6 @@ public:
     Bitboard get_bishop_moves(int sq) noexcept
     {
         return 0;
-    }
-};
-
-struct Move {
-    int from;
-    int to;
-    char promotion = '\0'; // '0' if no promotion, otherwise 'q','r','b','n'
-    //bool castling; //ev. redo or better integrate
-
-    bool operator<(const Move& other) const {
-        if (from != other.from) return from < other.from;
-        if (to != other.to) return to < other.to;
-        return promotion < other.promotion;
-    }
-
-    bool operator==(const Move& other) const {
-        return from == other.from && to == other.to && promotion == other.promotion;
     }
 };
 
@@ -642,27 +626,51 @@ public:
             //board.reverse_move(from, to, captured_piece);
 
 
-            if(attcker_bitboard(moving_piece, to, is_white, board) & enemy_king) score +=100;
+            if(attcker_bitboard(moving_piece, to, is_white, board) & enemy_king) score +=500; //Check bonus
 
 
-            if(captured_piece != '.'){
-                score = piece_value(captured_piece)*10 - piece_value(moving_piece);
+            if(captured_piece != '.'){ //Capture bonus
+                score += piece_value(captured_piece)*10 - piece_value(moving_piece);
             }
 
-            if(move.promotion != '\0'){
+            if(move.promotion != '\0'){ //Promotion bonus
                 switch(move.promotion){
-                    case 'q': score+=100; break;
-                    case 'r': score+=70; break;
-                    case 'b': score+=50; break;
-                    case 'n': score+=50; break;
+                    case 'q': score+= 900; break;
+                    case 'r': score+= 500; break;
+                    case 'b': score+= 330; break;
+                    case 'n': score+= 320; break;
+
                 }
+            }
+
+            if (is_white) score += 10; else score -= 10; //tempo bonus
+
+            //mobility bonus
+            uint64_t knights = is_white ? board.get_white_knights() : board.get_black_knights();
+            while (knights) {
+                int sq = Evaluator::lsb(knights);
+                score += Evaluator::popcount(knight_moves(sq, is_white, board)) * 5;
+                knights = Evaluator::clear_lsb(knights);
+            }
+            uint64_t bishops = is_white ? board.get_white_bishops() : board.get_black_bishops();
+            while (bishops) {
+                int sq = Evaluator::lsb(bishops);
+                score += Evaluator::popcount(bishop_moves(sq, is_white, board)) * 5;
+                bishops = Evaluator::clear_lsb(bishops);
             }
 
 
             scored_moves.push_back({move, score});
         }
-        std::sort(scored_moves.begin(), scored_moves.end(),
-                  [](auto a, auto b){ return a.second > b.second; });
+        if(is_white){
+            // White wants largest first
+            std::sort(scored_moves.begin(), scored_moves.end(),
+                      [](auto a, auto b){ return a.second > b.second; });
+        } else {
+            // Black wants smallest first
+            std::sort(scored_moves.begin(), scored_moves.end(),
+                      [](auto a, auto b){ return a.second < b.second; });
+        }
         moves.clear();
         for (auto& m : scored_moves) moves.push_back(m.first);
     }

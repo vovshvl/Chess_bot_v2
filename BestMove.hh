@@ -31,11 +31,11 @@ public:
 
         for(auto[from, to, promotion]:moves) {
             char captured_piece = board.get_piece_at_square(to);
-            board.execute_move(from, to, promotion);
+            board.execute_move({from, to, promotion});
 
             int score = minmax(board, depth - 1, !white_to_move, eval, alpha, beta);
 
-            board.reverse_move(from, to, captured_piece);
+            board.reverse_move({from, to, captured_piece});
 
             if (white_to_move) {
                 if (score > best_score) best_score = score;
@@ -58,10 +58,10 @@ public:
 
         for (auto [from, to, promotion] : moves) {
             char captured_piece = b.get_piece_at_square(to);
-            b.execute_move(from, to, promotion);
+            b.execute_move({from, to, promotion});
 
             int score = minmax(b, depth - 1, !white_to_move, eval, alpha, beta);
-            b.reverse_move(from, to, captured_piece);
+            b.reverse_move({from, to, captured_piece});
 
             if (white_to_move) {
                 if (score > best_score) {
@@ -103,11 +103,11 @@ public:
 
         for (auto [from, to, promotion] : moves) {
             char captured_piece = b.get_piece_at_square(to);
-            b.execute_move(from, to, promotion);
+            b.execute_move({from, to, promotion});
 
             int score = minmax_benchmark(b, depth - 1, !white_to_move, eval, counter, alpha, beta);
 
-            b.reverse_move(from, to, captured_piece);
+            b.reverse_move({from, to, captured_piece});
 
             if (white_to_move) {
                 if (score > best_score) best_score = score;
@@ -133,11 +133,11 @@ public:
 
         for (auto [from, to, promotion] : moves) {
             char captured_piece = b.get_piece_at_square(to);
-            b.execute_move(from, to, promotion);
+            b.execute_move({from, to, promotion});
 
             int score = minmax_benchmark(b, depth - 1, !white_to_move, eval, counter, alpha, beta);
 
-            b.reverse_move(from, to, captured_piece);
+            b.reverse_move({from, to, captured_piece});
 
             if (white_to_move) {
                 if (score > best_score) {

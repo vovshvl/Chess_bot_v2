@@ -11,6 +11,18 @@
 #include <cstdint>
 
 class Evaluator {
+public:
+    static inline int popcount(uint64_t x) noexcept {
+        return __builtin_popcountll(x);
+    }
+    //must be checked for being nonzero
+    static inline int lsb(uint64_t x) noexcept {
+        return __builtin_ctzll(x);
+    }
+
+    static inline uint64_t clear_lsb(uint64_t x) noexcept {
+        return x & (x - 1);
+    }
 private:
     static constexpr int PAWN_VALUE = 100;
     static constexpr int KNIGHT_VALUE = 320;
@@ -100,6 +112,11 @@ private:
         0x0808080808080808ULL, 0x1010101010101010ULL, 0x2020202020202020ULL,
         0x4040404040404040ULL, 0x8080808080808080ULL
     };
+    static constexpr std::array<uint64_t, 8> RANK_MASKS = {
+            0x00000000000000FFULL, 0x000000000000FF00ULL,  0x0000000000FF0000ULL,
+            0x00000000FF000000ULL, 0x000000FF00000000ULL, 0x0000FF0000000000ULL,
+            0x00FF000000000000ULL, 0xFF00000000000000ULL
+    };
 
     // King safety masks - precomputed for maximum speed
     static constexpr std::array<uint64_t, 64> KING_ZONE_MASKS = {
@@ -139,17 +156,7 @@ private:
         0x0000000000000000ULL, 0x0000000000000000ULL, 0x0000000000000000ULL, 0x0000000000000000ULL
     };
 
-    static inline int popcount(uint64_t x) noexcept {
-        return __builtin_popcountll(x);
-    }
-    //must be checked for being nonzero
-    static inline int lsb(uint64_t x) noexcept {
-        return __builtin_ctzll(x);
-    }
 
-    static inline uint64_t clear_lsb(uint64_t x) noexcept {
-        return x & (x - 1);
-    }
 
     static inline bool is_endgame(const board& b) noexcept {
         uint64_t heavy_pieces = b.get_white_queens() | b.get_black_queens() |
@@ -263,6 +270,20 @@ private:
         return score;
     }
 
+    int evaluate_central_pawn(const board& b) const noexcept{
+        int score = 0;
+        constexpr uint64_t CENTRAL_MASK = (1ULL << 27) | (1ULL << 28) | (1ULL << 35) | (1ULL << 36);
+        uint64_t white_pawns = b.get_white_pawns();
+        uint64_t black_pawns = b.get_black_pawns();
+
+        int white_central_score = popcount(white_pawns & CENTRAL_MASK);
+        int black_central_score = popcount(black_pawns & CENTRAL_MASK);
+
+        int white_adv = 2*(popcount(white_pawns & RANK_MASKS[2])) + 4*(popcount(white_pawns & RANK_MASKS[3])) + 6*(popcount(white_pawns & RANK_MASKS[4])) + 8*popcount(white_pawns & RANK_MASKS[5]);
+        int black_adv = 2*(popcount(black_pawns & RANK_MASKS[5])) + 4*popcount(black_pawns & RANK_MASKS[4]) + 6*popcount(black_pawns & RANK_MASKS[3]) + 8*popcount(black_pawns & RANK_MASKS[2]);
+        return (white_central_score-black_central_score)*50+white_adv-black_adv;
+    }
+
     int evaluate_piece_bonuses(const board& b) const noexcept {
         int score = 0;
 
@@ -332,6 +353,17 @@ private:
         return score;
     }
 
+    int evaluate_castling(const board& b, bool is_endgame) const noexcept{
+        int score = 0;
+        if(!is_endgame){
+            if(b.get_queen_castle_white()) score-=30;
+            if(b.get_king_castle_white()) score-=30;
+            if(b.get_queen_castle_black()) score-=30;
+            if(b.get_king_castle_black()) score-=30;
+        }
+        return score;
+    }
+
 public:
     int evaluate(const board& b, bool white_to_move = true) const noexcept {
         bool endgame = is_endgame(b);
@@ -340,6 +372,8 @@ public:
         score += evaluate_pst(b, endgame);
         score += evaluate_piece_bonuses(b);
         score += evaluate_king_safety(b, endgame);
+        score += evaluate_castling(b, endgame);
+        //score += evaluate_central_pawn(b);
 
         if (!endgame) {
             score += evaluate_pawn_structure(b);

@@ -12,6 +12,7 @@ add_executable(chess_bot_new
         ChessGameDemo.hh
         BestMove.hh
         tests/MinmaxBenchmark.cc
+        tests/Game.cc
 )
 
 enable_testing()
