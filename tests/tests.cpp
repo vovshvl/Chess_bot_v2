@@ -91,6 +91,71 @@ TEST(BoardTest, test_move){
     }
 }
 
+TEST(BoardTest, test_capture){
+    board chess_board;
+
+    chess_board.set_piece(28, 'P');
+    chess_board.set_piece(35, 'p');
+
+    chess_board.execute_move({28,35});
+
+    board expected_chess_board;
+
+    expected_chess_board.set_piece(35, 'P');
+    for(int i=0;i<64; ++i){
+        EXPECT_EQ(chess_board.get_piece_at_square(i), expected_chess_board.get_piece_at_square(i));
+    }
+
+}
+
+TEST(BoardTest, test_reverse_move){
+    board chess_board;
+    chess_board.init_board();
+
+    board chess_board_before=chess_board;
+
+    chess_board.execute_move({12,28, '\0'});
+    chess_board.reverse_move({12,28,'\0'});
+    for(int i=0;i<64; ++i){
+        EXPECT_EQ(chess_board.get_piece_at_square(i), chess_board_before.get_piece_at_square(i));
+    }
+
+
+}
+
+TEST(BoardTest, test_reverse_move_castling){
+    board chess_board;
+
+    chess_board.set_piece(4, 'K');
+    chess_board.set_piece(7, 'R');
+
+    board chess_board_before=chess_board;
+
+    chess_board.execute_move({4, 6, '\0'});
+    chess_board.reverse_move({4,6,'\0'});
+
+    for(int i=0;i<64; ++i){
+        EXPECT_EQ(chess_board.get_piece_at_square(i), chess_board_before.get_piece_at_square(i));
+    }
+    EXPECT_EQ(chess_board.get_king_castle_white(), chess_board_before.get_king_castle_white());
+}
+
+TEST(BoardTest, test_reverse_move_capture){
+    board chess_board;
+
+    chess_board.set_piece(4, 'K');
+    chess_board.set_piece(7, 'R');
+    chess_board.set_piece(63, 'n');
+
+    board chess_board_before=chess_board;
+
+    chess_board.execute_move({7, 63, '\0'});
+    chess_board.reverse_move({7,63,'\0'});
+    for(int i=0;i<64; ++i){
+        EXPECT_EQ(chess_board.get_piece_at_square(i), chess_board_before.get_piece_at_square(i));
+    }
+}
+
 //pawn_move test
 TEST(PieceTest, test_pawn_move){
     board chess_board;
@@ -578,7 +643,7 @@ TEST(PieceTest, test_white_promotion){
     chess_board.set_piece(55, 'k');   // Black king h7
     chess_board.set_piece(49, 'P');   // White pawn b7
 
-    auto best_move = minimax.find_best_move(chess_board, 5, true, eval);
+    auto best_move = minimax.find_best_move(chess_board, 5, eval);
     Move expected_move= {49, 57, 'q'};
     EXPECT_EQ(best_move, expected_move);
 }
@@ -602,11 +667,13 @@ TEST(PieceTest, test_black_promotion){
     chess_board.set_piece(55, 'k');   // Black king h7
     chess_board.set_piece(8, 'p');   // Black pawn a2
 
-    auto best_move = minimax.find_best_move(chess_board, 5, false, eval);
+    chess_board.white_to_move = false;
+
+    auto best_move = minimax.find_best_move(chess_board, 5, eval);
     Move expected_move= {8, 0, 'q'};
     EXPECT_EQ(best_move, expected_move);
 }
-/*
+
 TEST(PieceTest, test_white_underpromotion){
     board chess_board;
     chess_board.reset_board();
@@ -631,18 +698,18 @@ TEST(PieceTest, test_white_underpromotion){
     chess_board.set_piece(62, 'p');   // Black pawn g8
     chess_board.set_piece(63, 'p');   // Black pawn h8
 
-    auto best_move = minimax.find_best_move(chess_board, 5, true, eval);
+    auto best_move = minimax.find_best_move(chess_board, 5, eval);
     Move expected_move= {53, 61, 'n'};
     EXPECT_EQ(best_move, expected_move);
 }
-*/
+
 TEST(BestMoveTest, test_opening_move) {
     board chess_board;
     chess_board.init_board();
     Minmax minimax;
     Evaluator eval;
 
-    auto best_move = minimax.find_best_move(chess_board, 5, true, eval);
+    auto best_move = minimax.find_best_move(chess_board, 5, eval);
 
     // In the initial position, e2-e4 or d2-d4 is likely best. Check that
     // the returned move is in a set of reasonable opening moves
@@ -655,7 +722,7 @@ TEST(BestMoveTest, test_opening_move) {
 
     EXPECT_TRUE(std::find(expected_moves.begin(), expected_moves.end(), best_move) != expected_moves.end());
 }
-/*
+
 TEST(BestMoveTest, test_opening_moves_black) {
     board chess_board;
     chess_board.init_board();
@@ -664,11 +731,17 @@ TEST(BestMoveTest, test_opening_moves_black) {
 
     chess_board.execute_move({12, 28,  '\0'});
 
-    auto best_move = minimax.find_best_move(chess_board, 4, false, eval);
+    chess_board.white_to_move = false;
+
+    auto best_move = minimax.find_best_move(chess_board, 4, eval);
 
     // Black's best moves in response to standard openings
-    Move expected_move = {50, 42};
+    std::vector<Move> expected_moves = {
+            {57, 42}, // b8-c6
+            {52, 36}, // e7-e5
+            {62, 45}, // g8-f6
+    };
 
-    EXPECT_EQ(best_move, expected_move);
+    EXPECT_TRUE(std::find(expected_moves.begin(), expected_moves.end(), best_move) != expected_moves.end());
 }
-*/
+

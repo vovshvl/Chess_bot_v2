@@ -18,11 +18,13 @@ public:
         b.print_board();
 
         while(move_count<10){
-            Move white_move = minimax.find_best_move(b, 5, true, eval);
+            //b.white_to_move = true;
+            Move white_move = minimax.find_best_move(b, 5, eval);
             b.execute_move({white_move.from, white_move.to, white_move.promotion});
             move_count++;
             b.print_board();
-            Move black_move = minimax.find_best_move(b, 5, false, eval);
+            //b.white_to_move = false;
+            Move black_move = minimax.find_best_move(b, 5, eval);
             b.execute_move({black_move.from, black_move.to, black_move.promotion});
             move_count++;
             b.print_board();

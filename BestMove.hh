@@ -20,24 +20,25 @@ class Minmax{
 public:
     static constexpr int oo = std::numeric_limits<int>::max();
 
-    int minmax(board& board, int depth, bool white_to_move, const Evaluator& eval, int alpha=-oo, int beta=oo){//with alphabeta prunning
+    int minmax(board& b, int depth, bool maximizing_white, const Evaluator& eval, int alpha=-oo, int beta=oo){//with alphabeta prunning
 
         Piece piece;
-        if(depth ==0)return eval.evaluate(board, white_to_move);
+        if(depth ==0)return eval.evaluate(b, b.white_to_move);
 
-        int best_score = white_to_move? -oo : oo;
-        auto moves = piece.legal_moves(board, white_to_move);
-        Piece::sort_moves(moves, board, white_to_move);
+        int best_score = maximizing_white == b.white_to_move ? -oo : oo;
+        auto moves = piece.legal_moves(b, b.white_to_move);
+        Piece::sort_moves(moves, b, b.white_to_move);
 
         for(auto[from, to, promotion]:moves) {
-            char captured_piece = board.get_piece_at_square(to);
-            board.execute_move({from, to, promotion});
+            char captured_piece = b.get_piece_at_square(to);
+            b.execute_move({from, to, promotion});
 
-            int score = minmax(board, depth - 1, !white_to_move, eval, alpha, beta);
+            int score = minmax(b, depth - 1,maximizing_white, eval, alpha, beta);
+            if (!b.white_to_move) score = -score;
 
-            board.reverse_move({from, to, captured_piece});
+            b.reverse_move({from, to, captured_piece});
 
-            if (white_to_move) {
+            if (b.white_to_move==maximizing_white) {
                 if (score > best_score) best_score = score;
                 if (best_score > alpha) alpha = best_score;
             } else {
@@ -49,10 +50,11 @@ public:
         return best_score;
     }
 
-    Move find_best_move(board& b, int depth, bool white_to_move, const Evaluator& eval, int alpha = -oo, int beta=oo){
-        auto moves = Piece::legal_moves(b, white_to_move);
-        Piece::sort_moves(moves, b, white_to_move);
-        int best_score = white_to_move ? std::numeric_limits<int>::min()
+    Move find_best_move(board& b, int depth, const Evaluator& eval, int alpha = -oo, int beta=oo){
+        bool root_player_is_white = b.white_to_move;
+        auto moves = Piece::legal_moves(b,b.white_to_move);
+        Piece::sort_moves(moves, b, b.white_to_move);
+        int best_score = b.white_to_move ? std::numeric_limits<int>::min()
                                        : std::numeric_limits<int>::max();
         Move best_move = {-1,-1};
 
@@ -60,10 +62,11 @@ public:
             char captured_piece = b.get_piece_at_square(to);
             b.execute_move({from, to, promotion});
 
-            int score = minmax(b, depth - 1, !white_to_move, eval, alpha, beta);
+            int score = minmax(b, depth - 1,root_player_is_white, eval, alpha, beta);
+            //std::cout<< " depth: " <<depth << " white to move: " <<b.white_to_move <<  " alpha: " <<alpha <<  " beta: " <<beta<< " score: " << score;
             b.reverse_move({from, to, captured_piece});
 
-            if (white_to_move) {
+            if (b.white_to_move) {
                 if (score > best_score) {
                     best_score = score;
                     best_move = {from, to, promotion};

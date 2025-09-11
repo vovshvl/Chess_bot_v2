@@ -29,6 +29,7 @@ private:
     static constexpr int BISHOP_VALUE = 330;
     static constexpr int ROOK_VALUE = 500;
     static constexpr int QUEEN_VALUE = 900;
+    /*
     static constexpr std::array<int16_t, 64> PAWN_PST = {
          0,  0,  0,  0,  0,  0,  0,  0,
         78, 83, 86, 73, 102, 82, 85, 90,
@@ -38,6 +39,17 @@ private:
         -22, 9, 5, -11, -10, -2, 3, -19,
         -31, 8, -7, -37, -36, -14, 3, -31,
          0, 0, 0, 0, 0, 0, 0, 0
+    };
+     */
+    int PAWN_PST[64] = {
+            0,0,0,0,0,0,0,0,     // rank 1
+            5,5,5,5,5,5,5,5,     // rank 2
+            10,10,10,10,10,10,10,10, // rank 3
+            20,20,20,20,20,20,20,20, // rank 4
+            20,20,20,20,20,20,20,20, // rank 5
+            10,10,10,10,10,10,10,10, // rank 6
+            5,5,5,5,5,5,5,5,         // rank 7
+            0,0,0,0,0,0,0,0          // rank 8
     };
 
     static constexpr std::array<int16_t, 64> KNIGHT_PST = {
@@ -279,9 +291,10 @@ private:
         int white_central_score = popcount(white_pawns & CENTRAL_MASK);
         int black_central_score = popcount(black_pawns & CENTRAL_MASK);
 
-        int white_adv = 2*(popcount(white_pawns & RANK_MASKS[2])) + 4*(popcount(white_pawns & RANK_MASKS[3])) + 6*(popcount(white_pawns & RANK_MASKS[4])) + 8*popcount(white_pawns & RANK_MASKS[5]);
-        int black_adv = 2*(popcount(black_pawns & RANK_MASKS[5])) + 4*popcount(black_pawns & RANK_MASKS[4]) + 6*popcount(black_pawns & RANK_MASKS[3]) + 8*popcount(black_pawns & RANK_MASKS[2]);
-        return (white_central_score-black_central_score)*50+white_adv-black_adv;
+        //int white_adv = 2*(popcount(white_pawns & RANK_MASKS[2])) + 4*(popcount(white_pawns & RANK_MASKS[3])) + 6*(popcount(white_pawns & RANK_MASKS[4])) + 8*popcount(white_pawns & RANK_MASKS[5]);
+        //int black_adv = 2*(popcount(black_pawns & RANK_MASKS[5])) + 4*popcount(black_pawns & RANK_MASKS[4]) + 6*popcount(black_pawns & RANK_MASKS[3]) + 8*popcount(black_pawns & RANK_MASKS[2]);
+        //return (white_central_score-black_central_score)*50+white_adv-black_adv;
+        return (white_central_score-black_central_score)*50;
     }
 
     int evaluate_piece_bonuses(const board& b) const noexcept {
@@ -372,14 +385,18 @@ public:
         score += evaluate_pst(b, endgame);
         score += evaluate_piece_bonuses(b);
         score += evaluate_king_safety(b, endgame);
-        score += evaluate_castling(b, endgame);
-        //score += evaluate_central_pawn(b);
+        //score += evaluate_castling(b, endgame);
+        score += evaluate_central_pawn(b);
 
         if (!endgame) {
             score += evaluate_pawn_structure(b);
         }
 
-        score += 10;
+        //score += 10;
+        //std::cout<<"score: "<<score;
+        //std::cout<<"for board:";
+        //b.print_board();
+
 
         return score;
     }
