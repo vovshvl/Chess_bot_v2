@@ -638,6 +638,11 @@ TEST(PieceTest, test_white_promotion){
     chess_board.white_rook = chess_board.black_rook = 0;
     chess_board.white_king = chess_board.black_king = 0;
 
+    chess_board.king_castle_white = false;
+    chess_board.king_castle_black = false;
+    chess_board.queen_castle_white=false;
+    chess_board.queen_castle_black = false;
+
     // Place only kings and rooks for castling tests
     chess_board.set_piece(4, 'K');   // White king e1
     chess_board.set_piece(55, 'k');   // Black king h7
@@ -661,6 +666,11 @@ TEST(PieceTest, test_black_promotion){
     chess_board.white_queen = chess_board.black_queen = 0;
     chess_board.white_rook = chess_board.black_rook = 0;
     chess_board.white_king = chess_board.black_king = 0;
+
+    chess_board.king_castle_white = false;
+    chess_board.king_castle_black = false;
+    chess_board.queen_castle_white=false;
+    chess_board.queen_castle_black = false;
 
     // Place only kings and rooks for castling tests
     chess_board.set_piece(4, 'K');   // White king e1
@@ -740,6 +750,7 @@ TEST(BestMoveTest, test_opening_moves_black) {
             {57, 42}, // b8-c6
             {52, 36}, // e7-e5
             {62, 45}, // g8-f6
+            {51,35} //d7-d5
     };
 
     EXPECT_TRUE(std::find(expected_moves.begin(), expected_moves.end(), best_move) != expected_moves.end());

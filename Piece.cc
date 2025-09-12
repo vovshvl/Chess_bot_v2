@@ -517,6 +517,50 @@ public:
         return queen_attacks(sq, is_white,board);
     }
 
+    static Bitboard castling(bool is_white, const board& board){
+        Bitboard result = 0;
+        Bitboard all_pieces = board.get_all_pieces();
+
+        if(is_white){
+            // King-side
+            if(board.get_king_castle_white() && (board.white_rook & (1ULL << 7))){
+                // Squares between king and rook must be empty
+                if((all_pieces & ((1ULL << 5) | (1ULL << 6))) == 0ULL &&
+                   !is_attacked(board,5,true) && !is_attacked(board,6,true) &&
+                   !is_in_check(board,true)) {
+                    result |= 1ULL << 6; // g1
+                }
+            }
+            // Queen-side
+            if(board.get_queen_castle_white() && (board.white_rook & (1ULL << 0))){
+                if((all_pieces & ((1ULL << 1) | (1ULL << 2) | (1ULL << 3))) == 0ULL &&
+                   !is_attacked(board,2,true) && !is_attacked(board,3,true) &&
+                   !is_in_check(board,true)) {
+                    result |= 1ULL << 2; // c1
+                }
+            }
+        } else { // black
+            if(board.get_king_castle_black() && (board.black_rook & (1ULL << 63))){
+                if((all_pieces & ((1ULL << 61) | (1ULL << 62))) == 0ULL &&
+                   !is_attacked(board,61,false) && !is_attacked(board,62,false) &&
+                   !is_in_check(board,false)) {
+                    result |= 1ULL << 62; // g8
+                }
+            }
+            if(board.get_queen_castle_black() && (board.black_rook & (1ULL << 56))){
+                if((all_pieces & ((1ULL << 57) | (1ULL << 58) | (1ULL << 59))) == 0ULL &&
+                   !is_attacked(board,58,false) && !is_attacked(board,59,false) &&
+                   !is_in_check(board,false)) {
+                    result |= 1ULL << 58; // c8
+                }
+            }
+        }
+
+        return result;
+    }
+
+
+
     static Bitboard king_moves(int sq, bool is_white, const board& board) {
         Bitboard moves = king_attacks(sq);
         Bitboard own_pieces = is_white ? board.get_white_pieces() : board.get_black_pieces();
@@ -531,6 +575,7 @@ public:
         return safe_moves | castling(is_white, board);
     }
 
+/*
     static Bitboard castling(bool is_white, const board& board){
         Bitboard kingside_castling = 0;
         Bitboard queenside_castling = 0;
@@ -581,6 +626,9 @@ public:
         return result;
 
     }
+
+*/
+
 
     static Bitboard is_defended(int sq, bool is_white,const board& chess_board) {
         return is_attacked(chess_board, sq,!is_white);

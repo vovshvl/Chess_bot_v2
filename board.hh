@@ -9,16 +9,17 @@
 #include "Move.hh"
 #define BOARD_HH
 struct UndoInfo {
-    char captured_piece;
-    char moving_piece;
-    bool king_castle_white, queen_castle_white;
-    bool king_castle_black, queen_castle_black;
+    char captured_piece = '.';
+    char moving_piece='.';
+    bool king_castle_white, queen_castle_white = true;
+    bool king_castle_black, queen_castle_black = true;
 };
 struct Move {
     int from;
     int to;
     char promotion = '\0'; // '0' if no promotion, otherwise 'q','r','b','n'
     //bool castling; //ev. redo or better integrate
+    //UndoInfo undo_info = {'.', '.', true, true, true, true};
 
     bool operator<(const Move& other) const {
         if (from != other.from) return from < other.from;
@@ -132,6 +133,24 @@ public:
         
         update_combined_bitboards();
     }
+
+    void set_piece_fast(int square, char piece){//without updating bitboards to be fast
+        uint64_t bit = 1ULL << square;
+        switch(piece) {
+            case 'P': white_pawn |= bit; break;
+            case 'p': black_pawn |= bit; break;
+            case 'N': white_knight |= bit; break;
+            case 'n': black_knight |= bit; break;
+            case 'B': white_bishop |= bit; break;
+            case 'b': black_bishop |= bit; break;
+            case 'R': white_rook |= bit; break;
+            case 'r': black_rook |= bit; break;
+            case 'Q': white_queen |= bit; break;
+            case 'q': black_queen |= bit; break;
+            case 'K': white_king |= bit; break;
+            case 'k': black_king |= bit; break;
+        }
+    }
     
     void clear_square(int square) {
         uint64_t clear_bit = ~(1ULL << square);
@@ -149,6 +168,22 @@ public:
         black_king &= clear_bit;
         
         update_combined_bitboards();
+    }
+
+    inline void clear_square_fast(int square) { //faster version without updating bitboards
+        uint64_t bit = ~(1ULL << square);
+        white_pawn   &= bit;
+        black_pawn   &= bit;
+        white_knight &= bit;
+        black_knight &= bit;
+        white_bishop &= bit;
+        black_bishop &= bit;
+        white_rook   &= bit;
+        black_rook   &= bit;
+        white_queen  &= bit;
+        black_queen  &= bit;
+        white_king   &= bit;
+        black_king   &= bit;
     }
 
     char get_piece_at_square(int square) const {
@@ -202,118 +237,25 @@ public:
 
         init_board();
     }
-    /*
-    void execute_move_on_bitboard(const Move& m){
-        int from = m.from;
-        int to = m.to;
-        char promotion = m.promotion;
-        char moving_piece = get_piece_at_square(from);
-        char captured_piece = get_piece_at_square(to);
 
+    void remove_piece_at(char piece, uint64_t mask) {
+        switch (piece) {
+            case 'P': white_pawn   &= ~mask; break;
+            case 'N': white_knight &= ~mask; break;
+            case 'B': white_bishop &= ~mask; break;
+            case 'R': white_rook   &= ~mask; break;
+            case 'Q': white_queen  &= ~mask; break;
+            case 'K': white_king   &= ~mask; break;
 
-        //Castling, so the rook moves too
-        if(moving_piece =='K' and from == 4 and (to == 6 or to==2)){
-            if(to==6){
-                clear_square(7);
-                set_piece(5, 'R');
-            }
-            if(to==2){
-                clear_square(0);
-                set_piece(3, 'R');
-            }
-        }
-        else if (moving_piece =='k' and from == 60 and (to == 58 or to==62)){
-            if(to==62){
-                clear_square(63);
-                set_piece(61, 'r');
-            }
-            if(to==58){
-                clear_square(56);
-                set_piece(59, 'r');
-            }
-        }
-        if(moving_piece == 'K'){
-            king_castle_white = false;
-            queen_castle_white = false;
-        }
-        else if(moving_piece == 'k'){
-            king_castle_black = false;
-            queen_castle_black = false;
-        }
-        else if(moving_piece == 'R'){
-            if(from == 0) queen_castle_white = false;
-            if(from == 7) king_castle_white = false;
-        }
-        else if(moving_piece == 'r'){
-            if(from == 56) queen_castle_black = false;
-            if(from == 63) king_castle_black = false;
-        }
-
-        if(captured_piece == 'R'){
-            if(to == 0) queen_castle_white = false;
-            if(to == 7) king_castle_white = false;
-        }
-        else if(captured_piece == 'r'){
-            if(to == 56) queen_castle_black = false;
-            if(to == 63) king_castle_black = false;
-        }
-        clear_square(from);
-        if(promotion != '\0'){
-            // Pawn promotion
-            set_piece(to, (isupper(moving_piece) ? toupper(promotion) : tolower(promotion)));
-        } else {
-            // Normal move
-            set_piece(to, moving_piece);
+            case 'p': black_pawn   &= ~mask; break;
+            case 'n': black_knight &= ~mask; break;
+            case 'b': black_bishop &= ~mask; break;
+            case 'r': black_rook   &= ~mask; break;
+            case 'q': black_queen  &= ~mask; break;
+            case 'k': black_king   &= ~mask; break;
         }
     }
-    void execute_move(const Move& m) {
 
-        UndoInfo undo;
-        undo.captured_piece = get_piece_at_square(m.to);
-        undo.king_castle_white = king_castle_white;
-        undo.king_castle_black = king_castle_black;
-        undo.queen_castle_white = queen_castle_white;
-        undo.queen_castle_black = queen_castle_black;
-
-        execute_move_on_bitboard(m);
-        history_info.push_back(undo);
-        history_moves.push_back(m);
-    }
-    void reverse_move_on_bitboard(const Move& m, const UndoInfo& undo){
-        int from = m.from;
-        int to = m.to;
-        char promotion = m.promotion;
-        char moving_piece = get_piece_at_square(to);
-
-        clear_square(to);
-        set_piece(from, moving_piece);
-
-        if (undo.captured_piece != '.') {
-            set_piece(to, undo.captured_piece);
-        }
-
-        if (moving_piece == 'K' && (m.to == 6 || m.to == 2)) {
-            if (m.to == 6) { clear_square(5); set_piece(7,'R'); }
-            if (m.to == 2) { clear_square(3); set_piece(0,'R'); }
-        }
-        if (moving_piece == 'k' && (m.to == 62 || m.to == 58)) {
-            if (m.to == 62) { clear_square(61); set_piece(63,'r'); }
-            if (m.to == 58) { clear_square(59); set_piece(56,'r'); }
-        }
-    }
-    void reverse_move(const Move& m) {
-        if (history_moves.empty()) return;
-        UndoInfo undo = history_info.back();
-        history_info.pop_back();
-
-        king_castle_white  = undo.king_castle_white;
-        queen_castle_white = undo.queen_castle_white;
-        king_castle_black  = undo.king_castle_black;
-        queen_castle_black = undo.queen_castle_black;
-
-        reverse_move_on_bitboard(m, undo);
-}
-     */
     // set_piece and then update_combined_bitboards separately for from and to was too slow
     inline void update_combined_bitboards_incremental(uint64_t from_mask, uint64_t to_mask,
                                                       char piece, bool is_capture, char captured_piece) {
@@ -364,12 +306,11 @@ public:
         int to   = m.to;
         char promotion = m.promotion;
 
+
         char moving_piece   = get_piece_at_square(from);
         char captured_piece = get_piece_at_square(to);
 
-        if(m.from==28 && m.to==35){
-            //std::cout<<"from: "<<from<<"to: "<<to<<"cap_piece: "<<captured_piece;
-        }
+        uint64_t& moving_piece_bitboard = get_piece_bitboard_ref(moving_piece);
 
 
         uint64_t from_mask = 1ULL << from;
@@ -404,58 +345,25 @@ public:
         if (moving_piece == 'R') { if (from == 0) queen_castle_white = false; if (from == 7) king_castle_white = false; }
         if (moving_piece == 'r') { if (from == 56) queen_castle_black = false; if (from == 63) king_castle_black = false; }
 
-        // --- Helper lambdas ---
-        auto remove_piece_at = [&](char piece, uint64_t mask){
-            switch(piece){
-                case 'P': white_pawn &= ~mask; break;
-                case 'N': white_knight &= ~mask; break;
-                case 'B': white_bishop &= ~mask; break;
-                case 'R': white_rook &= ~mask; break;
-                case 'Q': white_queen &= ~mask; break;
-                case 'K': white_king &= ~mask; break;
-                case 'p': black_pawn &= ~mask; break;
-                case 'n': black_knight &= ~mask; break;
-                case 'b': black_bishop &= ~mask; break;
-                case 'r': black_rook &= ~mask; break;
-                case 'q': black_queen &= ~mask; break;
-                case 'k': black_king &= ~mask; break;
-            }
-        };
+        //Remove captured piece
+        if(captured_piece != '.') {
+            uint64_t& captured_piece_bitboard = get_piece_bitboard_ref(captured_piece);
+            captured_piece_bitboard &= ~to_mask;
 
-        auto move_piece = [&](char piece, uint64_t from_mask, uint64_t to_mask){
-            switch(piece){
-                case 'P': white_pawn   = (white_pawn & ~from_mask)   | to_mask; break;
-                case 'N': white_knight = (white_knight & ~from_mask) | to_mask; break;
-                case 'B': white_bishop = (white_bishop & ~from_mask) | to_mask; break;
-                case 'R': white_rook   = (white_rook & ~from_mask)   | to_mask; break;
-                case 'Q': white_queen  = (white_queen & ~from_mask)  | to_mask; break;
-                case 'K': white_king   = (white_king & ~from_mask)   | to_mask; break;
-                case 'p': black_pawn   = (black_pawn & ~from_mask)   | to_mask; break;
-                case 'n': black_knight = (black_knight & ~from_mask) | to_mask; break;
-                case 'b': black_bishop = (black_bishop & ~from_mask) | to_mask; break;
-                case 'r': black_rook   = (black_rook & ~from_mask)   | to_mask; break;
-                case 'q': black_queen  = (black_queen & ~from_mask)  | to_mask; break;
-                case 'k': black_king   = (black_king & ~from_mask)   | to_mask; break;
-            }
-        };
+        }
 
-        // --- Remove captured piece (if any) ---
-        if(captured_piece != '.') remove_piece_at(captured_piece, to_mask);
+        moving_piece_bitboard &= ~from_mask; //remove piece from from square
 
         // --- Handle promotion separately ---
         if(promotion != '\0') {
-            remove_piece_at(moving_piece, from_mask);
             char promo_piece = isupper(moving_piece) ? toupper(promotion) : tolower(promotion);
-            move_piece(promo_piece, 0, to_mask);
+            uint64_t& promotion_bitboard = get_piece_bitboard_ref(promo_piece);
+            promotion_bitboard |= to_mask;
+
         } else {
             // Normal move
-            move_piece(moving_piece, from_mask, to_mask);
+            moving_piece_bitboard |= to_mask; //adds piece to to square
         }
-
-        // --- Recompute combined bitboards ---
-        white_pieces = white_pawn | white_knight | white_bishop | white_rook | white_queen | white_king;
-        black_pieces = black_pawn | black_knight | black_bishop | black_rook | black_queen | black_king;
-        all_pieces   = white_pieces | black_pieces;
     }
 
     void execute_move(const Move& m) {
@@ -474,8 +382,6 @@ public:
         history_info.push_back(undo);
 
         white_to_move = !white_to_move;
-
-
         update_combined_bitboards();
     }
 
@@ -488,57 +394,43 @@ public:
         uint64_t from_mask = 1ULL << from;
         uint64_t to_mask   = 1ULL << to;
 
-        char moving_piece = (promotion != '\0') ? (isupper(undo.moving_piece) ? 'P' : 'p')
-                                                : undo.moving_piece;
+        char moving_piece = (promotion != '\0') ? (isupper(undo.moving_piece) ? 'P' : 'p') : undo.moving_piece;
+        uint64_t& moving_piece_bitboard = get_piece_bitboard_ref(moving_piece);
+
+
 
         // Undo castling rooks
-        if (moving_piece == 'K') {
+        if (moving_piece == 'K' && from == 4) {
             if (to == 6) { white_rook &= ~(1ULL << 5); white_rook |= 1ULL << 7; }
             if (to == 2) { white_rook &= ~(1ULL << 3); white_rook |= 1ULL << 0; }
-        } else if (moving_piece == 'k') {
+        } else if (moving_piece == 'k' && from == 60) {
             if (to == 62) { black_rook &= ~(1ULL << 61); black_rook |= 1ULL << 63; }
             if (to == 58) { black_rook &= ~(1ULL << 59); black_rook |= 1ULL << 56; }
         }
 
+        moving_piece_bitboard &= ~to_mask; //remove piece from to
+
         // Undo the move
         if (promotion != '\0') {
-            // Remove promoted piece and restore pawn
-            switch (promotion) {
-                case 'Q': white_queen  &= ~to_mask; break;
-                case 'R': white_rook   &= ~to_mask; break;
-                case 'B': white_bishop &= ~to_mask; break;
-                case 'N': white_knight &= ~to_mask; break;
-                case 'q': black_queen  &= ~to_mask; break;
-                case 'r': black_rook   &= ~to_mask; break;
-                case 'b': black_bishop &= ~to_mask; break;
-                case 'n': black_knight &= ~to_mask; break;
-            }
+            // Remove promoted piece
+            char promo_piece = isupper(undo.moving_piece) ? toupper(promotion) : tolower(promotion);
+            uint64_t& promo_bitboard = get_piece_bitboard_ref(promo_piece);
+            promo_bitboard &= ~to_mask;
 
-            if (isupper(undo.moving_piece)) white_pawn |= from_mask;
-            else black_pawn |= from_mask;
-
+            // Restore pawn
+            uint64_t& pawn_bitboard = get_piece_bitboard_ref(undo.moving_piece);
+            pawn_bitboard |= from_mask;
         } else {
-            // Normal move: move piece back, no capture
-            update_combined_bitboards_incremental(to_mask, from_mask, moving_piece, false, '.');
+            uint64_t& piece_bitboard = get_piece_bitboard_ref(undo.moving_piece);
+            piece_bitboard &= ~to_mask;
+            piece_bitboard |= from_mask;
         }
 
         // Restore captured piece if any
         if (undo.captured_piece != '.') {
             uint64_t cap_mask = 1ULL << to;
-            switch (undo.captured_piece) {
-                case 'P': white_pawn   |= cap_mask; break;
-                case 'N': white_knight |= cap_mask; break;
-                case 'B': white_bishop |= cap_mask; break;
-                case 'R': white_rook   |= cap_mask; break;
-                case 'Q': white_queen  |= cap_mask; break;
-                case 'K': white_king   |= cap_mask; break;
-                case 'p': black_pawn   |= cap_mask; break;
-                case 'n': black_knight |= cap_mask; break;
-                case 'b': black_bishop |= cap_mask; break;
-                case 'r': black_rook   |= cap_mask; break;
-                case 'q': black_queen  |= cap_mask; break;
-                case 'k': black_king   |= cap_mask; break;
-            }
+            uint64_t& captured_bitboard = get_piece_bitboard_ref(undo.captured_piece);
+            captured_bitboard |= cap_mask;
         }
 
         // Restore castling rights
@@ -546,9 +438,6 @@ public:
         queen_castle_white = undo.queen_castle_white;
         king_castle_black  = undo.king_castle_black;
         queen_castle_black = undo.queen_castle_black;
-
-        // Update combined bitboards
-        update_combined_bitboards();
     }
 
 
@@ -605,6 +494,42 @@ public:
                 case -6: return get_black_king();
                 default: return 0;
 
+        }
+    };
+    uint64_t get_pieces_by_char( const char character) const {
+        switch (character) {
+            case 'P': return get_white_pawns();
+            case 'p': return get_black_pawns();
+            case 'N': return get_white_knights();
+            case 'n': return get_black_knights();
+            case 'B': return get_white_bishops();
+            case 'b': return get_black_bishops();
+            case 'R': return get_white_rooks();
+            case 'r': return get_black_rooks();
+            case 'Q': return get_white_queens();
+            case 'q': return get_black_queens();
+            case 'K': return get_white_king();
+            case 'k': return get_black_king();
+            default: return '.';
+
+        }
+    };
+    uint64_t& get_piece_bitboard_ref(char piece) {
+        switch(piece) {
+            case 'P': return white_pawn;
+            case 'p': return black_pawn;
+            case 'N': return white_knight;
+            case 'n': return black_knight;
+            case 'B': return white_bishop;
+            case 'b': return black_bishop;
+            case 'R': return white_rook;
+            case 'r': return black_rook;
+            case 'Q': return white_queen;
+            case 'q': return black_queen;
+            case 'K': return white_king;
+            case 'k': return black_king;
+            default:
+                throw std::runtime_error("Invalid piece for reference");
         }
     };
     bool get_king_castle_black() const {return king_castle_black;}

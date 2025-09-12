@@ -17,7 +17,7 @@ public:
 
         b.print_board();
 
-        while(move_count<10){
+        while(move_count<20){
             //b.white_to_move = true;
             Move white_move = minimax.find_best_move(b, 5, eval);
             b.execute_move({white_move.from, white_move.to, white_move.promotion});
