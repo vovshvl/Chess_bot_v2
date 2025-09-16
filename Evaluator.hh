@@ -29,7 +29,7 @@ private:
     static constexpr int BISHOP_VALUE = 330;
     static constexpr int ROOK_VALUE = 500;
     static constexpr int QUEEN_VALUE = 900;
-    /*
+
     static constexpr std::array<int16_t, 64> PAWN_PST = {
          0,  0,  0,  0,  0,  0,  0,  0,
         78, 83, 86, 73, 102, 82, 85, 90,
@@ -40,7 +40,8 @@ private:
         -31, 8, -7, -37, -36, -14, 3, -31,
          0, 0, 0, 0, 0, 0, 0, 0
     };
-     */
+
+    /*
     int PAWN_PST[64] = {
             0,0,0,0,0,0,0,0,     // rank 1
             5,5,5,5,5,5,5,5,     // rank 2
@@ -51,6 +52,7 @@ private:
             5,5,5,5,5,5,5,5,         // rank 7
             0,0,0,0,0,0,0,0          // rank 8
     };
+     */
 
     static constexpr std::array<int16_t, 64> KNIGHT_PST = {
         -66, -53, -75, -75, -10, -55, -58, -70,
@@ -96,6 +98,7 @@ private:
         -39, -30, -31, -13, -31, -36, -34, -42
     };
 
+
     static constexpr std::array<int16_t, 64> KING_MG_PST = {
         4, 54, 47, -99, -99, 60, 83, -62,
         -32, 10, 55, 56, 56, 55, 10, 3,
@@ -106,6 +109,20 @@ private:
         -4, 3, -14, -50, -57, -18, 13, 4,
         17, 30, -3, -14, 6, -1, 40, 18
     };
+
+    /*
+    static constexpr std::array<int16_t, 64> KING_MG_PST = {
+            50,  200,  180, -400, -400,  220,  250, -150,
+            -100,   20,  150,  180,  180,  150,   20,   50,
+            -150,   30, -120,  120, -150,   80,   90, -100,
+            -120,   80,   20,  -20,  -50,   30,   10, -90,
+            -120,  -60,  -80,  -40,  -60,  -50,  -10, -80,
+            -80,  -70,  -60, -150, -120,  -60,  -50, -60,
+            -10,   20,  -30, -120, -150,  -40,   30,  10,
+            40,   60,  -10, -50,  10,   -5,   80,  50
+    };
+     */
+
 
     static constexpr std::array<int16_t, 64> KING_EG_PST = {
         -50, -40, -30, -20, -20, -30, -40, -50,
@@ -313,6 +330,13 @@ private:
         int score = 0;
 
         uint64_t white_king = b.get_white_king();
+        if(b.white_castled){
+            score +=200;
+        }
+        else{
+            score -=150;
+        }
+
         if (white_king) {
             int king_sq = lsb(white_king);
 
@@ -324,21 +348,27 @@ private:
             if (enemy_pieces) {
                 uint64_t king_zone = KING_ZONE_MASKS[king_sq];
                 int attackers = popcount(enemy_pieces & king_zone);
-                score -= attackers * 25;
+                score -= attackers * 20;
             }
 
             int king_file = king_sq % 8;
             for (int f = std::max(0, king_file - 1); f <= std::min(7, king_file + 1); f++) {
                 if (!(b.get_white_pawns() & FILE_MASKS[f])) {
-                    score -= 20;
+                    score -= 15;
                     if (b.get_black_rooks() & FILE_MASKS[f]) {
-                        score -= 15;
+                        score -= 25;
                     }
                 }
             }
         }
 
         uint64_t black_king = b.get_black_king();
+        if(b.black_castled){
+            score -=200;
+        }
+        else{
+            score +=150;
+        }
         if (black_king) {
             int king_sq = lsb(black_king);
 
@@ -348,16 +378,16 @@ private:
 
             uint64_t enemy_pieces = b.get_white_queens() | b.get_white_rooks();
             if (enemy_pieces) {
-                uint64_t king_zone = KING_ZONE_MASKS[king_sq];
+                uint64_t king_zone = KING_ZONE_MASKS[king_sq ^ 56];
                 int attackers = popcount(enemy_pieces & king_zone);
-                score += attackers * 25;
+                score += attackers * 20;
             }
             int king_file = king_sq % 8;
             for (int f = std::max(0, king_file - 1); f <= std::min(7, king_file + 1); f++) {
                 if (!(b.get_black_pawns() & FILE_MASKS[f])) {
-                    score += 20;
+                    score += 15;
                     if (b.get_white_rooks() & FILE_MASKS[f]) {
-                        score += 15;
+                        score += 25;
                     }
                 }
             }
@@ -366,16 +396,6 @@ private:
         return score;
     }
 
-    int evaluate_castling(const board& b, bool is_endgame) const noexcept{
-        int score = 0;
-        if(!is_endgame){
-            if(b.get_queen_castle_white()) score-=30;
-            if(b.get_king_castle_white()) score-=30;
-            if(b.get_queen_castle_black()) score-=30;
-            if(b.get_king_castle_black()) score-=30;
-        }
-        return score;
-    }
 
 public:
     int evaluate(const board& b, bool white_to_move = true) const noexcept {
@@ -385,12 +405,13 @@ public:
         score += evaluate_pst(b, endgame);
         score += evaluate_piece_bonuses(b);
         score += evaluate_king_safety(b, endgame);
-        //score += evaluate_castling(b, endgame);
         score += evaluate_central_pawn(b);
+
 
         if (!endgame) {
             score += evaluate_pawn_structure(b);
         }
+
 
         //score += 10;
         //std::cout<<"score: "<<score;
@@ -398,7 +419,7 @@ public:
         //b.print_board();
 
 
-        return score;
+        return white_to_move? score: -score;
     }
 };
 extern Evaluator g_ultra_evaluator;

@@ -623,7 +623,6 @@ TEST(PieceTest, test_king_moves) { //With castling, without moves
 
     EXPECT_EQ(white_castles, expected_white);
 }
-
 TEST(PieceTest, test_white_promotion){
     board chess_board;
     chess_board.reset_board();
@@ -643,17 +642,51 @@ TEST(PieceTest, test_white_promotion){
     chess_board.queen_castle_white=false;
     chess_board.queen_castle_black = false;
 
-    // Place only kings and rooks for castling tests
     chess_board.set_piece(4, 'K');   // White king e1
     chess_board.set_piece(55, 'k');   // Black king h7
     chess_board.set_piece(49, 'P');   // White pawn b7
 
-    auto best_move = minimax.find_best_move(chess_board, 5, eval);
+    chess_board.execute_move({49, 57, 'q'});
+
+    board expected_board;
+    expected_board.set_piece(4, 'K');   // White king e1
+    expected_board.set_piece(55, 'k');   // Black king h7
+    expected_board.set_piece(57, 'Q');   // White queen b8
+
+    for(int i=0;i<64; ++i){
+        EXPECT_EQ(chess_board.get_piece_at_square(i), expected_board.get_piece_at_square(i));
+    }
+}
+
+TEST(BestMoveTest, test_white_promotion){
+    board chess_board;
+    chess_board.reset_board();
+    Minmax minimax;
+    Evaluator eval;
+
+    // Clear all pieces
+    chess_board.white_pawn = chess_board.black_pawn = 0;
+    chess_board.white_knight = chess_board.black_knight = 0;
+    chess_board.white_bishop = chess_board.black_bishop = 0;
+    chess_board.white_queen = chess_board.black_queen = 0;
+    chess_board.white_rook = chess_board.black_rook = 0;
+    chess_board.white_king = chess_board.black_king = 0;
+
+    chess_board.king_castle_white = false;
+    chess_board.king_castle_black = false;
+    chess_board.queen_castle_white=false;
+    chess_board.queen_castle_black = false;
+
+    chess_board.set_piece(4, 'K');   // White king e1
+    chess_board.set_piece(55, 'k');   // Black king h7
+    chess_board.set_piece(49, 'P');   // White pawn b7
+
+    auto best_move = minimax.find_best_move_negamax(chess_board, 5, eval);
     Move expected_move= {49, 57, 'q'};
     EXPECT_EQ(best_move, expected_move);
 }
 
-TEST(PieceTest, test_black_promotion){
+TEST(BestMoveTest, test_black_promotion){
     board chess_board;
     chess_board.reset_board();
     Minmax minimax;
@@ -679,7 +712,7 @@ TEST(PieceTest, test_black_promotion){
 
     chess_board.white_to_move = false;
 
-    auto best_move = minimax.find_best_move(chess_board, 5, eval);
+    auto best_move = minimax.find_best_move_negamax(chess_board, 5, eval);
     Move expected_move= {8, 0, 'q'};
     EXPECT_EQ(best_move, expected_move);
 }
@@ -708,7 +741,7 @@ TEST(PieceTest, test_white_underpromotion){
     chess_board.set_piece(62, 'p');   // Black pawn g8
     chess_board.set_piece(63, 'p');   // Black pawn h8
 
-    auto best_move = minimax.find_best_move(chess_board, 5, eval);
+    auto best_move = minimax.find_best_move_negamax(chess_board, 5, eval);
     Move expected_move= {53, 61, 'n'};
     EXPECT_EQ(best_move, expected_move);
 }
@@ -719,7 +752,7 @@ TEST(BestMoveTest, test_opening_move) {
     Minmax minimax;
     Evaluator eval;
 
-    auto best_move = minimax.find_best_move(chess_board, 5, eval);
+    auto best_move = minimax.find_best_move_negamax(chess_board, 5, eval);
 
     // In the initial position, e2-e4 or d2-d4 is likely best. Check that
     // the returned move is in a set of reasonable opening moves
@@ -743,7 +776,7 @@ TEST(BestMoveTest, test_opening_moves_black) {
 
     chess_board.white_to_move = false;
 
-    auto best_move = minimax.find_best_move(chess_board, 4, eval);
+    auto best_move = minimax.find_best_move_negamax(chess_board, 4, eval);
 
     // Black's best moves in response to standard openings
     std::vector<Move> expected_moves = {
@@ -756,3 +789,86 @@ TEST(BestMoveTest, test_opening_moves_black) {
     EXPECT_TRUE(std::find(expected_moves.begin(), expected_moves.end(), best_move) != expected_moves.end());
 }
 
+TEST(BestMoveTest, test_mate_in_one_for_white){ //lichess puzzle #msqFt
+    board chess_board;
+    Minmax minimax;
+    Evaluator eval;
+
+    chess_board.set_piece(9, 'K');
+    chess_board.set_piece(10, 'P');
+    chess_board.set_piece(17, 'P');
+    chess_board.set_piece(8, 'P');
+    chess_board.set_piece(25, 'B');
+    chess_board.set_piece(43, 'N');
+    chess_board.set_piece(55, 'R');
+
+    chess_board.set_piece(59, 'k');
+    chess_board.set_piece(46, 'n');
+    chess_board.set_piece(22, 'n');
+    chess_board.set_piece(14, 'r');
+    chess_board.set_piece(7, 'q');
+    chess_board.set_piece(36, 'p');
+
+    auto best_move = minimax.find_best_move_negamax(chess_board, 4, eval);
+    std::vector<Move> expected_moves = {
+            {25, 32}
+    };
+
+    EXPECT_TRUE(std::find(expected_moves.begin(), expected_moves.end(), best_move) != expected_moves.end());
+}
+
+TEST(BestMoveTest, test_mate_in_one_for_black){ //lichess puzzle #msqFt
+    board chess_board;
+    Minmax minimax;
+    Evaluator eval;
+
+    chess_board.set_piece(9, 'k');
+    chess_board.set_piece(10, 'p');
+    chess_board.set_piece(17, 'p');
+    chess_board.set_piece(8, 'p');
+    chess_board.set_piece(25, 'b');
+    chess_board.set_piece(43, 'n');
+    chess_board.set_piece(55, 'r');
+
+    chess_board.set_piece(59, 'K');
+    chess_board.set_piece(46, 'N');
+    chess_board.set_piece(22, 'N');
+    chess_board.set_piece(14, 'R');
+    chess_board.set_piece(7, 'Q');
+    chess_board.set_piece(36, 'P');
+
+    chess_board.white_to_move = false;
+    auto best_move = minimax.find_best_move_negamax(chess_board, 4, eval);
+    std::vector<Move> expected_moves = {
+            {25, 32}
+    };
+
+    EXPECT_TRUE(std::find(expected_moves.begin(), expected_moves.end(), best_move) != expected_moves.end());
+}
+
+TEST(BestMoveTest, test_castling){
+    board chess_board;
+    Minmax minimax;
+    Evaluator eval;
+    chess_board.init_board();
+
+    chess_board.execute_move({12,28});
+    chess_board.execute_move({52,36});
+    chess_board.execute_move({6,21});
+    chess_board.execute_move({56,57});
+    chess_board.execute_move({5,33});
+    chess_board.execute_move({62,45});
+
+
+    auto best_move = minimax.find_best_move_negamax(chess_board, 4, eval);
+    std::vector<Move> expected_moves = {
+            {4, 6}
+    };
+
+
+    chess_board.execute_move(best_move);
+    chess_board.print_board();
+
+    EXPECT_TRUE(std::find(expected_moves.begin(), expected_moves.end(), best_move) != expected_moves.end());
+
+}

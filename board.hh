@@ -13,6 +13,8 @@ struct UndoInfo {
     char moving_piece='.';
     bool king_castle_white, queen_castle_white = true;
     bool king_castle_black, queen_castle_black = true;
+    bool white_castled = false;
+    bool black_castled = false;
 };
 struct Move {
     int from;
@@ -58,6 +60,10 @@ public:
     bool king_castle_white = true;
     bool queen_castle_black = true;
     bool queen_castle_white = true;
+
+    //Castling flags to determine castling
+    bool white_castled = false;
+    bool black_castled = false;
 
     std::vector<UndoInfo> history_info; //For fast do and undo
     std::vector<Move> history_moves;
@@ -306,7 +312,6 @@ public:
         int to   = m.to;
         char promotion = m.promotion;
 
-
         char moving_piece   = get_piece_at_square(from);
         char captured_piece = get_piece_at_square(to);
 
@@ -322,20 +327,24 @@ public:
                 white_rook &= ~(1ULL << 7);
                 white_rook |= 1ULL << 5;
                 king_castle_white = queen_castle_white = false;
+                white_castled = true;
             } else if (to == 2) { // White queen-side
                 white_rook &= ~(1ULL << 0);
                 white_rook |= 1ULL << 3;
                 king_castle_white = queen_castle_white = false;
+                white_castled = true;
             }
         } else if (moving_piece == 'k' && from == 60) {
             if (to == 62) { // Black king-side
                 black_rook &= ~(1ULL << 63);
                 black_rook |= 1ULL << 61;
                 king_castle_black = queen_castle_black = false;
+                black_castled = true;
             } else if (to == 58) { // Black queen-side
                 black_rook &= ~(1ULL << 56);
                 black_rook |= 1ULL << 59;
                 king_castle_black = queen_castle_black = false;
+                black_castled = true;
             }
         }
 
@@ -375,6 +384,8 @@ public:
         undo.queen_castle_white = queen_castle_white;
         undo.king_castle_black  = king_castle_black;
         undo.queen_castle_black = queen_castle_black;
+        undo.white_castled = white_castled;
+        undo.black_castled = black_castled;
 
         execute_move_on_bitboard(m);
 
@@ -401,11 +412,11 @@ public:
 
         // Undo castling rooks
         if (moving_piece == 'K' && from == 4) {
-            if (to == 6) { white_rook &= ~(1ULL << 5); white_rook |= 1ULL << 7; }
-            if (to == 2) { white_rook &= ~(1ULL << 3); white_rook |= 1ULL << 0; }
+            if (to == 6) { white_rook &= ~(1ULL << 5); white_rook |= 1ULL << 7;}
+            if (to == 2) { white_rook &= ~(1ULL << 3); white_rook |= 1ULL << 0;}
         } else if (moving_piece == 'k' && from == 60) {
-            if (to == 62) { black_rook &= ~(1ULL << 61); black_rook |= 1ULL << 63; }
-            if (to == 58) { black_rook &= ~(1ULL << 59); black_rook |= 1ULL << 56; }
+            if (to == 62) { black_rook &= ~(1ULL << 61); black_rook |= 1ULL << 63;}
+            if (to == 58) { black_rook &= ~(1ULL << 59); black_rook |= 1ULL << 56;}
         }
 
         moving_piece_bitboard &= ~to_mask; //remove piece from to
@@ -438,6 +449,8 @@ public:
         queen_castle_white = undo.queen_castle_white;
         king_castle_black  = undo.king_castle_black;
         queen_castle_black = undo.queen_castle_black;
+        white_castled = undo.white_castled;
+        black_castled = undo.black_castled;
     }
 
 
@@ -451,10 +464,13 @@ public:
         UndoInfo undo = history_info.back();
         history_info.pop_back();
 
-        white_to_move = !white_to_move;
+
 
         // Undo the move on the bitboards
         reverse_move_on_bitboard(last_move, undo);
+
+        white_to_move = !white_to_move;
+        update_combined_bitboards();
     }
 
 
@@ -529,7 +545,9 @@ public:
             case 'K': return white_king;
             case 'k': return black_king;
             default:
-                throw std::runtime_error("Invalid piece for reference");
+                throw std::runtime_error(
+                        std::string("Invalid piece for reference: '") + piece + "'"
+                );
         }
     };
     bool get_king_castle_black() const {return king_castle_black;}

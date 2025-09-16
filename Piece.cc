@@ -196,6 +196,8 @@ public:
             std::vector<int> possible_king_moves_sq = bitboard_to_array(king_moves(king_sq, is_white, chess_board));
             for (int pos_sq : possible_king_moves_sq) {
                 Move move = {king_sq, pos_sq};
+                char target_piece = chess_board.get_piece_at_square(pos_sq);
+                if (target_piece == 'K' || target_piece == 'k') continue;
                 all_moves.push_back(move);}
 
             if(num_checkers ==1){
@@ -221,6 +223,8 @@ public:
                     Bitboard moves_bb = pawn_moves(piece_sq, is_white, chess_board);
                     moves_bb &= checkmask;
                     for (int pos_sq : bitboard_to_array(moves_bb)) {
+                        char target_piece = chess_board.get_piece_at_square(pos_sq);
+                        if (target_piece == 'K' || target_piece == 'k') continue;
                         if((is_white && pos_sq >=56) || (!is_white && pos_sq<=7)){ //Promotion
                             all_moves.push_back({piece_sq, pos_sq, 'q'});
                             all_moves.push_back({piece_sq, pos_sq, 'r'});
@@ -236,6 +240,8 @@ public:
                     Bitboard moves_bb = bishop_moves(piece_sq, is_white, chess_board);
                     moves_bb &= checkmask;
                     for (int pos_sq : bitboard_to_array(moves_bb)) {
+                        char target_piece = chess_board.get_piece_at_square(pos_sq);
+                        if (target_piece == 'K' || target_piece == 'k') continue;
                         all_moves.push_back({piece_sq, pos_sq});
                     }
                 }
@@ -243,6 +249,8 @@ public:
                     Bitboard moves_bb = rook_moves(piece_sq, is_white, chess_board);
                     moves_bb &= checkmask;
                     for (int pos_sq : bitboard_to_array(moves_bb)) {
+                        char target_piece = chess_board.get_piece_at_square(pos_sq);
+                        if (target_piece == 'K' || target_piece == 'k') continue;
                         all_moves.push_back({piece_sq, pos_sq});
                     }
                 }
@@ -250,6 +258,8 @@ public:
                     Bitboard moves_bb = queen_moves(piece_sq, is_white, chess_board);
                     moves_bb &= checkmask;
                     for (int pos_sq : bitboard_to_array(moves_bb)) {
+                        char target_piece = chess_board.get_piece_at_square(pos_sq);
+                        if (target_piece == 'K' || target_piece == 'k') continue;
                         all_moves.push_back({piece_sq, pos_sq});
                     }
                 }
@@ -264,6 +274,8 @@ public:
             for (int knight_sq : knights_sq) {
                 std::vector<int> possible_knight_moves_sq = bitboard_to_array(knight_moves(knight_sq, is_white, chess_board));
                 for (int pos_sq : possible_knight_moves_sq) {
+                    char target_piece = chess_board.get_piece_at_square(pos_sq);
+                    if (target_piece == 'K' || target_piece == 'k') continue;
                     Move move = {knight_sq, pos_sq};
                     all_moves.push_back(move);
                 }
@@ -272,7 +284,8 @@ public:
             for (int pawn_sq : pawns_sq) {
                 std::vector<int> possible_pawn_moves_sq = bitboard_to_array(pawn_moves(pawn_sq, is_white, chess_board));
                 for (int pos_sq : possible_pawn_moves_sq) {
-
+                    char target_piece = chess_board.get_piece_at_square(pos_sq);
+                    if (target_piece == 'K' || target_piece == 'k') continue;
                     if((is_white && pos_sq >=56) || (!is_white && pos_sq<=7)){ //Promotion
                         all_moves.push_back({pawn_sq, pos_sq, 'q'});
                         all_moves.push_back({pawn_sq, pos_sq, 'r'});
@@ -288,6 +301,8 @@ public:
             for (int bishop_sq : bishops_sq) {
                 std::vector<int> possible_bishop_moves_sq = bitboard_to_array(bishop_moves(bishop_sq, is_white, chess_board));
                 for (int pos_sq : possible_bishop_moves_sq) {
+                    char target_piece = chess_board.get_piece_at_square(pos_sq);
+                    if (target_piece == 'K' || target_piece == 'k') continue;
                     Move move = {bishop_sq, pos_sq};
                     all_moves.push_back(move);
                 }
@@ -296,6 +311,8 @@ public:
             for (int rook_sq : rooks_sq) {
                 std::vector<int> possible_rook_moves_sq = bitboard_to_array(rook_moves(rook_sq, is_white, chess_board));
                 for (int pos_sq : possible_rook_moves_sq) {
+                    char target_piece = chess_board.get_piece_at_square(pos_sq);
+                    if (target_piece == 'K' || target_piece == 'k') continue;
                     Move move = {rook_sq, pos_sq};
                     all_moves.push_back(move);
                 }
@@ -304,6 +321,8 @@ public:
             for (int queen_sq : queens_sq) {
                 std::vector<int> possible_queen_moves_sq = bitboard_to_array(queen_moves(queen_sq, is_white, chess_board));
                 for (int pos_sq : possible_queen_moves_sq) {
+                    char target_piece = chess_board.get_piece_at_square(pos_sq);
+                    if (target_piece == 'K' || target_piece == 'k') continue;
                     Move move = {queen_sq, pos_sq};
                     all_moves.push_back(move);
                 }
@@ -311,6 +330,8 @@ public:
             int king_sq = get_square_by_bitboard(king);
             std::vector<int> possible_king_moves_sq = bitboard_to_array(king_moves(king_sq, is_white, chess_board));
                 for (int pos_sq : possible_king_moves_sq) {
+                    char target_piece = chess_board.get_piece_at_square(pos_sq);
+                    if (target_piece == 'K' || target_piece == 'k') continue;
                     Move move = {king_sq, pos_sq};
                     all_moves.push_back(move);
                 }
@@ -682,12 +703,23 @@ public:
             }
 
             if(move.promotion != '\0'){ //Promotion bonus
-                switch(move.promotion){
-                    case 'q': score+= 900; break;
-                    case 'r': score+= 500; break;
-                    case 'b': score+= 330; break;
-                    case 'n': score+= 320; break;
+                if(is_white){
+                    switch(move.promotion){
+                        case 'q': score+= 900; break;
+                        case 'r': score+= 500; break;
+                        case 'b': score+= 330; break;
+                        case 'n': score+= 320; break;
 
+                    }
+                }
+                if(!is_white){
+                    switch(move.promotion){
+                        case 'q': score-= 900; break;
+                        case 'r': score-= 500; break;
+                        case 'b': score-= 330; break;
+                        case 'n': score-= 320; break;
+
+                    }
                 }
             }
 
