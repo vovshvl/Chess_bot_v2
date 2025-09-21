@@ -176,18 +176,37 @@ public:
         return best_move;
     }
 
-    int negamax(board& b, int depth, int alpha, int beta, const Evaluator& eval, bool side_to_move){
-        if(depth==0){
-            return eval.evaluate(b,  side_to_move);
-        }
-
+    int negamax(board& b, int depth, int alpha, int beta, const Evaluator& eval, bool side_to_move, int half_moves){
         int best_score = -oo;
         std::vector<Move> moves = piece.legal_moves(b,  side_to_move);
         Piece::sort_moves(moves, b,  side_to_move);
 
+        //Mate/stalemate detection
+        /*
+        if(moves.empty()){
+            if(piece.is_in_check(b, side_to_move)){
+                //std::cout<<"mate";
+                return -32000+half_moves;
+            }
+            else{
+                return 0;
+            }
+        }
+         */
+        if (piece.is_mate(b, side_to_move))
+            return -100000 + half_moves;
+
+        if(depth==0){
+            //return eval.evaluate(b,  side_to_move);
+            return quiescence(b, alpha, beta, side_to_move, eval, half_moves);
+        }
+
         for(Move move : moves){
             b.execute_move(move);
-            int score = -negamax(b, depth-1, -beta, -alpha, eval, !side_to_move);
+            int new_depth = depth-1;
+            //if (piece.is_in_check(b, !side_to_move))
+                //new_depth = std::min(depth, new_depth + 1);
+            int score = -negamax(b, new_depth, -beta, -alpha, eval, !side_to_move, half_moves+1);
             //if(move.from==8) std::cout<<"Move from "<<move.from<<" to "<<move.to<<" score "<<score<< " "<<b.white_castled<<"\n";
             b.reverse_move(move);
 
@@ -208,7 +227,7 @@ public:
 
         for (Move move : moves) {
             b.execute_move(move);
-            int score = -negamax(b, depth - 1, -beta, -alpha, eval, !side_to_move);
+            int score = -negamax(b, depth - 1, -beta, -alpha, eval, !side_to_move, 0);
             //std::cout<<"Move from "<<move.from<<" to "<<move.to<<" score "<<score<< " "<<b.white_castled<<"\n";
             b.reverse_move(move);
 
@@ -224,6 +243,35 @@ public:
         return best_move;
     }
 
+    int quiescence(board& b, int alpha, int beta, bool side_to_move, const Evaluator& eval, int half_moves) {
+        if (piece.is_mate(b, side_to_move))
+            return -100000 + half_moves;
+        int static_eval = eval.evaluate(b, side_to_move);
 
+        int best_value = static_eval;
+        if(best_value >= beta) return best_value;
+        if(best_value > alpha) alpha = best_value;
+
+        std::vector<Move> noisy_moves = piece.generate_noisy_moves(b, side_to_move);
+
+
+        for(auto &nm:noisy_moves){
+            b.execute_move(nm);
+            if (piece.is_in_check(b, side_to_move)) {
+                b.reverse_move(nm);
+                continue; // illegal, skip
+            }
+            int score = -quiescence(b, -beta, -alpha, !side_to_move, eval, half_moves+1);
+            b.reverse_move(nm);
+
+            if( score >= beta )
+                return score;
+            if( score > best_value )
+                best_value = score;
+            if( score > alpha )
+                alpha = score;
+        }
+        return best_value;
+    }
 };
 #endif // BESTMOVE_HH

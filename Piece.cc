@@ -48,6 +48,11 @@ public:
         return 0;
     }
 };
+struct ScoredMove {
+    Move move;
+    int score;
+    bool noisy; // true = capture/check/promotion = 1
+};
 
 class Piece {
 private:
@@ -753,5 +758,110 @@ public:
         }
         moves.clear();
         for (auto& m : scored_moves) moves.push_back(m.first);
+    }
+
+    static std::vector<Move> generate_noisy_moves(board& chess_board, bool is_white){
+        std::vector<Move> noisy;
+        Bitboard knight;
+        Bitboard bishop;
+        Bitboard rook;
+        Bitboard queen;
+        Bitboard king;
+        Bitboard pawns;
+
+        Bitboard enemy_king = is_white? chess_board.get_black_king() : chess_board.get_white_king();
+        if (is_white) {
+            knight = chess_board.get_white_knights();
+            bishop = chess_board.get_white_bishops();
+            rook = chess_board.get_white_rooks();
+            queen = chess_board.get_white_queens();
+            king = chess_board.get_white_king();
+            pawns = chess_board.get_white_pawns();
+
+        }
+        else {
+            knight = chess_board.get_black_knights();
+            bishop = chess_board.get_black_bishops();
+            rook = chess_board.get_black_rooks();
+            queen = chess_board.get_black_queens();
+            king = chess_board.get_black_king();
+            pawns = chess_board.get_black_pawns();
+        }
+        std::vector<int> pawns_sq = bitboard_to_array(pawns);
+        for (int pawn_sq : pawns_sq) {
+            std::vector<int> possible_pawn_moves_sq = bitboard_to_array(pawn_moves(pawn_sq, is_white, chess_board));
+            for (int pos_sq : possible_pawn_moves_sq) {
+                char target_piece = chess_board.get_piece_at_square(pos_sq);
+                if (target_piece == 'K' || target_piece == 'k') continue;
+                if(((is_white && pos_sq >=56) || (!is_white && pos_sq<=7)) && target_piece!='.' ){ //Promotion
+                    noisy.push_back({pawn_sq, pos_sq, 'q'});
+                    noisy.push_back({pawn_sq, pos_sq, 'r'});
+                    noisy.push_back({pawn_sq, pos_sq, 'n'});
+                    noisy.push_back({pawn_sq, pos_sq, 'b'});
+                }
+                else if(target_piece!='.'){
+                    Move move = {pawn_sq, pos_sq};
+                    noisy.push_back(move);
+                }
+            }
+        }
+        std::vector<int> knights_sq = bitboard_to_array(knight);
+        for (int knight_sq : knights_sq) {
+            std::vector<int> possible_knight_moves_sq = bitboard_to_array(knight_moves(knight_sq, is_white, chess_board));
+            for (int pos_sq : possible_knight_moves_sq) {
+                char target_piece = chess_board.get_piece_at_square(pos_sq);
+                if (target_piece == 'K' || target_piece == 'k') continue;
+                if(target_piece!='.'){
+                    Move move = {knight_sq, pos_sq};
+                    noisy.push_back(move);
+                }
+            }
+        }
+        std::vector<int> bishops_sq = bitboard_to_array(bishop);
+        for (int bishop_sq : bishops_sq) {
+            std::vector<int> possible_bishop_moves_sq = bitboard_to_array(bishop_moves(bishop_sq, is_white, chess_board));
+            for (int pos_sq : possible_bishop_moves_sq) {
+                char target_piece = chess_board.get_piece_at_square(pos_sq);
+                if (target_piece == 'K' || target_piece == 'k') continue;
+                if(target_piece!='.'){
+                    Move move = {bishop_sq, pos_sq};
+                    noisy.push_back(move);
+                }
+            }
+        }
+        for (int piece_sq : bitboard_to_array(rook)) {
+            Bitboard moves_bb = rook_moves(piece_sq, is_white, chess_board);
+            for (int pos_sq : bitboard_to_array(moves_bb)) {
+                char target_piece = chess_board.get_piece_at_square(pos_sq);
+                if (target_piece == 'K' || target_piece == 'k') continue;
+                if(target_piece!='.'){
+                    Move move = {piece_sq, pos_sq};
+                    noisy.push_back(move);
+                }
+            }
+        }
+        for (int piece_sq : bitboard_to_array(queen)) {
+            Bitboard moves_bb = queen_moves(piece_sq, is_white, chess_board);
+            for (int pos_sq : bitboard_to_array(moves_bb)) {
+                char target_piece = chess_board.get_piece_at_square(pos_sq);
+                if (target_piece == 'K' || target_piece == 'k') continue;
+                if(target_piece!='.'){
+                    Move move = {piece_sq, pos_sq};
+                    noisy.push_back(move);
+                }
+            }
+        }
+        int king_sq = get_square_by_bitboard(king);
+        for (int pos_sq : bitboard_to_array(king_moves(king_sq, is_white, chess_board))) {
+            char target_piece = chess_board.get_piece_at_square(pos_sq);
+            if (target_piece == 'K' || target_piece == 'k') continue;
+            if(target_piece!='.'){
+                Move move = {king_sq, pos_sq};
+                noisy.push_back(move);
+            }
+        }
+
+        //Check also noisy
+        return noisy;
     }
 };
