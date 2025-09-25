@@ -461,6 +461,42 @@ TEST(PieceTest, test_legal_moves_double_check_with_block) {
     EXPECT_EQ(white_legal_moves, expected_moves);
 }
 
+TEST(PieceTest, test_legal_moves_leaving_king_in_check_bishop){
+    board chess_board;
+
+    chess_board.set_piece(63, 'r');
+    chess_board.set_piece(7, 'K');
+    chess_board.set_piece(15, 'B');
+
+    std::vector<Move> white_legal_moves = Piece::legal_moves(chess_board, true);
+    std::vector<Move> expected_moves = {
+            {7, 6}, {7, 14}
+    };
+    std::sort(white_legal_moves.begin(), white_legal_moves.end());
+    std::sort(expected_moves.begin(), expected_moves.end());
+
+    EXPECT_EQ(white_legal_moves, expected_moves);
+}
+TEST(PieceTest, test_legal_moves_leaving_king_in_check_queen){
+    board chess_board;
+
+    chess_board.set_piece(63, 'r');
+    chess_board.set_piece(48, 'r');
+    chess_board.set_piece(32, 'r');
+    chess_board.set_piece(6, 'r');
+    chess_board.set_piece(55, 'Q');
+    chess_board.set_piece(47, 'K');
+
+    std::vector<Move> white_legal_moves = Piece::legal_moves(chess_board, true);
+    std::vector<Move> expected_moves = {
+            {55, 63}
+    };
+    std::sort(white_legal_moves.begin(), white_legal_moves.end());
+    std::sort(expected_moves.begin(), expected_moves.end());
+
+    EXPECT_EQ(white_legal_moves, expected_moves);
+}
+
 TEST(BoardTest, test_mate) {
     board chess_board;
     chess_board.reset_board();
@@ -809,7 +845,7 @@ TEST(BestMoveTest, test_mate_in_one_for_white){ //lichess puzzle #msqFt
     chess_board.set_piece(7, 'q');
     chess_board.set_piece(36, 'p');
 
-    auto best_move = minimax.find_best_move_negamax(chess_board, 4, eval);
+    auto best_move = minimax.find_best_move_negamax(chess_board, 6, eval);
     std::vector<Move> expected_moves = {
             {25, 32}
     };
@@ -881,15 +917,21 @@ TEST(BestMoveTest, test_mate_in_2){
     chess_board.set_piece(0, 'R');
     chess_board.set_piece(8, 'R');
 
-    chess_board.set_piece(40, 'n');
+    //chess_board.set_piece(40, 'n');
 
-
+    std::cout<<"best move 1"<< "\n";
     auto best_move_1 = minimax.find_best_move_negamax(chess_board, 6, eval);
     chess_board.execute_move(best_move_1);
+    chess_board.print_board();
+    std::cout<<"best responce"<< "\n";
     auto best_responce = minimax.find_best_move_negamax(chess_board, 4, eval);
     chess_board.execute_move(best_responce);
+    chess_board.print_board();
+    std::cout<<"best move 2"<< "\n";
     auto best_move_2 = minimax.find_best_move_negamax(chess_board, 6, eval);
     chess_board.execute_move(best_move_2);
+    chess_board.print_board();
+
 
     std::vector<Move> expected_moves = {
             {0, 6},

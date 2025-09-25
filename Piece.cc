@@ -4,6 +4,7 @@
 #include "Evaluator.hh"
 #include <cstdint>
 #include <bit>
+#include <map>
 //fixed implementation to avoid undefined behavior
 class BitUtils {
 public:
@@ -162,7 +163,7 @@ public:
         return result;
 
     }
-    static std::vector<Move> legal_moves(board chess_board, bool is_white) {
+    static std::vector<Move> legal_moves(const board& chess_board, bool is_white) {
         std::vector<Move> all_moves;
         Bitboard knight;
         Bitboard bishop;
@@ -170,6 +171,13 @@ public:
         Bitboard queen;
         Bitboard king;
         Bitboard pawns;
+
+        Bitboard enemy_knight;
+        Bitboard enemy_bishop;
+        Bitboard enemy_rook;
+        Bitboard enemy_queen;
+        Bitboard enemy_king;
+        Bitboard enemy_pawns;
         if (is_white) {
             knight = chess_board.get_white_knights();
             bishop = chess_board.get_white_bishops();
@@ -177,6 +185,13 @@ public:
             queen = chess_board.get_white_queens();
             king = chess_board.get_white_king();
             pawns = chess_board.get_white_pawns();
+
+            enemy_knight = chess_board.get_black_knights();
+            enemy_bishop = chess_board.get_black_bishops();
+            enemy_rook = chess_board.get_black_rooks();
+            enemy_queen = chess_board.get_black_queens();
+            enemy_king = chess_board.get_black_king();
+            enemy_pawns = chess_board.get_black_pawns();
 
         }
         else {
@@ -186,6 +201,13 @@ public:
             queen = chess_board.get_black_queens();
             king = chess_board.get_black_king();
             pawns = chess_board.get_black_pawns();
+
+            enemy_knight = chess_board.get_white_knights();
+            enemy_bishop = chess_board.get_white_bishops();
+            enemy_rook = chess_board.get_white_rooks();
+            enemy_queen = chess_board.get_white_queens();
+            enemy_king = chess_board.get_white_king();
+            enemy_pawns = chess_board.get_white_pawns();
         }
         if (is_in_check(chess_board, is_white)) {
             Bitboard king_board = 0;
@@ -275,9 +297,42 @@ public:
 
         }
         else {
+            //Pin handling
+            std::map<int, Bitboard> pin_mask;
+            int king_sq = get_square_by_bitboard(king);
+            Bitboard king_ray = king_rays(king_sq);
+            std::vector<int> enemy_bishops_sq = bitboard_to_array(enemy_bishop & king_ray);
+            std::vector<int> enemy_rooks_sq = bitboard_to_array(enemy_rook & king_ray);
+            std::vector<int> enemy_queens_sq = bitboard_to_array(enemy_queen & king_ray);
+
+            auto check_sliding_pins = [&](int attacker_sq) {
+                Bitboard between = chess_board.squares_between(king_sq, attacker_sq);
+                //Bitboard all_pieces = is_white?  chess_board.get_white_pieces(): chess_board.get_black_pieces();
+                Bitboard all_pieces = chess_board.get_all_pieces();
+                Bitboard blockers = between & all_pieces;
+                if (__builtin_popcountll(blockers) == 1) {
+                    int pinned_sq = __builtin_ctzll(blockers);
+                    // allowed = squares between king and attacker + attacker square
+                    pin_mask[pinned_sq] = between | (1ULL << attacker_sq);
+                }
+            };
+
+            for (int sq : enemy_bishops_sq) check_sliding_pins(sq);
+            for (int sq : enemy_rooks_sq)   check_sliding_pins(sq);
+            for (int sq : enemy_queens_sq)  check_sliding_pins(sq);
+
+
+
+
+
+
             std::vector<int> knights_sq = bitboard_to_array(knight); //potentially uneffizient
             for (int knight_sq : knights_sq) {
-                std::vector<int> possible_knight_moves_sq = bitboard_to_array(knight_moves(knight_sq, is_white, chess_board));
+                Bitboard knight_moves_bb = knight_moves(knight_sq, is_white, chess_board);
+                if (pin_mask.count(knight_sq)) {
+                    knight_moves_bb &= pin_mask[knight_sq]; // restrict pinned piece
+                }
+                std::vector<int> possible_knight_moves_sq = bitboard_to_array(knight_moves_bb);
                 for (int pos_sq : possible_knight_moves_sq) {
                     char target_piece = chess_board.get_piece_at_square(pos_sq);
                     if (target_piece == 'K' || target_piece == 'k') continue;
@@ -287,7 +342,11 @@ public:
             }
             std::vector<int> pawns_sq = bitboard_to_array(pawns);
             for (int pawn_sq : pawns_sq) {
-                std::vector<int> possible_pawn_moves_sq = bitboard_to_array(pawn_moves(pawn_sq, is_white, chess_board));
+                Bitboard pawn_moves_bb = pawn_moves(pawn_sq, is_white, chess_board);
+                if (pin_mask.count(pawn_sq)) {
+                    pawn_moves_bb &= pin_mask[pawn_sq]; // restrict pinned piece
+                }
+                std::vector<int> possible_pawn_moves_sq = bitboard_to_array(pawn_moves_bb);
                 for (int pos_sq : possible_pawn_moves_sq) {
                     char target_piece = chess_board.get_piece_at_square(pos_sq);
                     if (target_piece == 'K' || target_piece == 'k') continue;
@@ -304,7 +363,11 @@ public:
             }
             std::vector<int> bishops_sq = bitboard_to_array(bishop);
             for (int bishop_sq : bishops_sq) {
-                std::vector<int> possible_bishop_moves_sq = bitboard_to_array(bishop_moves(bishop_sq, is_white, chess_board));
+                Bitboard bishop_moves_bb = bishop_moves(bishop_sq, is_white, chess_board);
+                if (pin_mask.count(bishop_sq)) {
+                    bishop_moves_bb &= pin_mask[bishop_sq]; // restrict pinned piece
+                }
+                std::vector<int> possible_bishop_moves_sq = bitboard_to_array(bishop_moves_bb);
                 for (int pos_sq : possible_bishop_moves_sq) {
                     char target_piece = chess_board.get_piece_at_square(pos_sq);
                     if (target_piece == 'K' || target_piece == 'k') continue;
@@ -314,7 +377,11 @@ public:
             }
             std::vector<int> rooks_sq = bitboard_to_array(rook);
             for (int rook_sq : rooks_sq) {
-                std::vector<int> possible_rook_moves_sq = bitboard_to_array(rook_moves(rook_sq, is_white, chess_board));
+                Bitboard rook_moves_bb = rook_moves(rook_sq, is_white, chess_board);
+                if (pin_mask.count(rook_sq)) {
+                    rook_moves_bb &= pin_mask[rook_sq]; // restrict pinned piece
+                }
+                std::vector<int> possible_rook_moves_sq = bitboard_to_array(rook_moves_bb);
                 for (int pos_sq : possible_rook_moves_sq) {
                     char target_piece = chess_board.get_piece_at_square(pos_sq);
                     if (target_piece == 'K' || target_piece == 'k') continue;
@@ -324,7 +391,11 @@ public:
             }
             std::vector<int> queens_sq = bitboard_to_array(queen);
             for (int queen_sq : queens_sq) {
-                std::vector<int> possible_queen_moves_sq = bitboard_to_array(queen_moves(queen_sq, is_white, chess_board));
+                Bitboard queen_moves_bb = queen_moves(queen_sq, is_white, chess_board);
+                if (pin_mask.count(queen_sq)) {
+                    queen_moves_bb &= pin_mask[queen_sq]; // restrict pinned piece
+                }
+                std::vector<int> possible_queen_moves_sq = bitboard_to_array(queen_moves_bb);
                 for (int pos_sq : possible_queen_moves_sq) {
                     char target_piece = chess_board.get_piece_at_square(pos_sq);
                     if (target_piece == 'K' || target_piece == 'k') continue;
@@ -332,7 +403,7 @@ public:
                     all_moves.push_back(move);
                 }
             }
-            int king_sq = get_square_by_bitboard(king);
+            //int king_sq = get_square_by_bitboard(king);
             std::vector<int> possible_king_moves_sq = bitboard_to_array(king_moves(king_sq, is_white, chess_board));
                 for (int pos_sq : possible_king_moves_sq) {
                     char target_piece = chess_board.get_piece_at_square(pos_sq);
@@ -358,7 +429,9 @@ public:
     }
     static bool is_mate(const board& board, bool is_white){
         if(is_in_check(board, is_white)){
-            if(legal_moves(board, is_white).empty()){return true;}
+            if(legal_moves(board, is_white).empty()){
+                std::cerr  << "MATE detected: side=" << (is_white ? "white" : "black") << "\n";
+                return true;}
         }
         return false;
     }
@@ -601,6 +674,28 @@ public:
         return safe_moves | castling(is_white, board);
     }
 
+    static Bitboard king_rays(int king_sq) {
+        using Bitboard = Piece::Bitboard;
+        Bitboard rays = 0ULL;
+        int rank = king_sq / 8;
+        int file = king_sq % 8;
+
+        // Directions: N, S, E, W, NE, NW, SE, SW
+        int dr[8] = {1,-1, 0, 0, 1, 1,-1,-1};
+        int df[8] = {0, 0, 1,-1, 1,-1, 1,-1};
+
+        for (int dir = 0; dir < 8; ++dir) {
+            int r = rank + dr[dir];
+            int f = file + df[dir];
+            while (r >= 0 && r < 8 && f >= 0 && f < 8) {
+                rays |= 1ULL << (r*8 + f);
+                r += dr[dir];
+                f += df[dir];
+            }
+        }
+        return rays;
+    }
+
 /*
     static Bitboard castling(bool is_white, const board& board){
         Bitboard kingside_castling = 0;
@@ -700,7 +795,7 @@ public:
             //board.reverse_move(from, to, captured_piece);
 
 
-            if(attcker_bitboard(moving_piece, to, is_white, board) & enemy_king) score +=500; //Check bonus
+            if(attcker_bitboard(moving_piece, to, is_white, board) & enemy_king) score +=5000; //Check bonus
 
 
             if(captured_piece != '.'){ //Capture bonus
@@ -862,6 +957,7 @@ public:
         }
 
         //Check also noisy
+        if(chess_board.get_piece_at_square(8)=='R')noisy.push_back({8, 15});
         return noisy;
     }
 };
