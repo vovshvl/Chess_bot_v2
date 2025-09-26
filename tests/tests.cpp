@@ -31,7 +31,6 @@ TEST(BoardTest, test_check){
     bool white_in_check = Piece::is_in_check(chess_board, true);
     bool black_in_check = Piece::is_in_check(chess_board, false);
 
-    // Assertions instead of prints
     EXPECT_TRUE(white_in_check);
     EXPECT_FALSE(black_in_check);
 }
@@ -233,6 +232,19 @@ TEST(PieceTest, test_knight_move){
 
     Bitboard black_moves = Piece::knight_moves(black_knight_sq, false, chess_board);
     EXPECT_EQ(black_moves, black_result_moves);
+}
+TEST(PieceTest, test_rook_attack){
+    board chess_board;
+    Piece p;
+
+    chess_board.set_piece(0, 'r');
+    chess_board.set_piece(60, 'r');
+    chess_board.set_piece(4, 'K');
+    chess_board.set_piece(12, 'R');
+    chess_board.set_piece(63, 'k');
+
+    chess_board.print_different_board(p.rook_attacks(60, false, chess_board));
+    chess_board.print_different_board(p.rook_attacks(0, false, chess_board));
 }
 // rook_move test
 TEST(PieceTest, test_rook_move) {
@@ -461,6 +473,52 @@ TEST(PieceTest, test_legal_moves_double_check_with_block) {
     EXPECT_EQ(white_legal_moves, expected_moves);
 }
 
+TEST(PieceTest, test_legal_moves_double_check_only_king_moves) {
+    board chess_board;
+
+    // White king on e1
+    chess_board.set_piece(4, 'K');
+    // Black rooks delivering double check from e8 and a1
+    chess_board.set_piece(60, 'r');
+    chess_board.set_piece(0, 'r');
+    // Black king somewhere safe
+    chess_board.set_piece(63, 'k');
+
+
+    std::vector<Move> white_legal_moves = Piece::legal_moves(chess_board, true);
+
+    // Only king moves are allowed
+    for (auto &move : white_legal_moves) {
+        EXPECT_EQ(move.from, 4); // only the king can move
+    }
+}
+
+TEST(PieceTest, test_king_escape_double_check_with_pinned_pieces) {
+    board chess_board;
+
+    // White king on e1
+    chess_board.set_piece(4, 'K');
+    // White rook pinned on e2
+    chess_board.set_piece(12, 'R');
+    // Black rooks delivering double check
+    chess_board.set_piece(60, 'r');
+    chess_board.set_piece(0, 'r');
+    // Black king far away
+    chess_board.set_piece(63, 'k');
+
+    chess_board.print_different_board(Piece::rook_attacks(60, false, chess_board));
+    chess_board.print_different_board(Piece::rook_attacks(0, false, chess_board));
+
+    std::vector<Move> white_moves = Piece::legal_moves(chess_board, true);
+
+    // Only king moves allowed, pinned rook must NOT move
+    for (auto &move : white_moves) {
+        EXPECT_NE(move.from, 12); // pinned rook cannot move in double check
+    }
+}
+
+
+
 TEST(PieceTest, test_legal_moves_leaving_king_in_check_bishop){
     board chess_board;
 
@@ -496,6 +554,30 @@ TEST(PieceTest, test_legal_moves_leaving_king_in_check_queen){
 
     EXPECT_EQ(white_legal_moves, expected_moves);
 }
+
+TEST(PieceTest, test_pinned_piece_blocked) {
+    board chess_board;
+    chess_board.reset_board();
+
+    // White king on e1
+    chess_board.set_piece(4, 'K');
+    // White rook pinned on e2
+    chess_board.set_piece(12, 'R');
+    // Black rook attacking along e-file
+    chess_board.set_piece(60, 'r');
+    // Black king safe
+    chess_board.set_piece(63, 'k');
+
+    std::vector<Move> white_legal_moves = Piece::legal_moves(chess_board, true);
+
+    // Pinned rook can only move along e-file (capture or stay)
+    for (auto &move : white_legal_moves) {
+        if (move.from == 12) {
+            EXPECT_TRUE(move.to == 20 || move.to == 28 || move.to == 36 || move.to == 44 || move.to == 52 || move.to == 60);
+        }
+    }
+}
+
 
 TEST(BoardTest, test_mate) {
     board chess_board;
@@ -659,6 +741,25 @@ TEST(PieceTest, test_king_moves) { //With castling, without moves
 
     EXPECT_EQ(white_castles, expected_white);
 }
+
+TEST(PieceTest, test_king_stepping_into_check){
+    board chess_board;
+
+    chess_board.set_piece(4, 'K');
+    chess_board.set_piece(13, 'P');
+    chess_board.set_piece(59, 'r');
+    chess_board.set_piece(61, 'r');
+
+    std::vector<Move> white_legal_moves = Piece::legal_moves(chess_board, true);
+    std::vector<Move> expected_moves = {
+            {4, 12},{4, 5}, {13, 21}, {13, 29}
+    };
+    std::sort(white_legal_moves.begin(), white_legal_moves.end());
+    std::sort(expected_moves.begin(), expected_moves.end());
+
+    EXPECT_EQ(white_legal_moves, expected_moves);
+
+}
 TEST(PieceTest, test_white_promotion){
     board chess_board;
     chess_board.reset_board();
@@ -693,6 +794,31 @@ TEST(PieceTest, test_white_promotion){
         EXPECT_EQ(chess_board.get_piece_at_square(i), expected_board.get_piece_at_square(i));
     }
 }
+
+TEST(PieceTest, test_pawn_promotion_check) {
+    board chess_board;
+
+    // White king safe
+    chess_board.set_piece(4, 'k');
+    // Black king far away
+    chess_board.set_piece(63, 'K');
+    // White pawn ready to promote on 6th rank
+    chess_board.set_piece(48, 'P');
+    // Black rook giving check along the file
+    chess_board.set_piece(57, 'r');
+
+    std::vector<Move> legal_moves = Piece::legal_moves(chess_board, true);
+
+    // Pawn promotion must include moves to capture blocking rook
+    bool promotion_found = false;
+    for (auto &move : legal_moves) {
+        if (move.from == 48 && move.to == 57) {
+            promotion_found = true;
+        }
+    }
+    EXPECT_TRUE(promotion_found);
+}
+
 
 TEST(BestMoveTest, test_white_promotion){
     board chess_board;
@@ -921,16 +1047,35 @@ TEST(BestMoveTest, test_mate_in_2){
 
     std::cout<<"best move 1"<< "\n";
     auto best_move_1 = minimax.find_best_move_negamax(chess_board, 6, eval);
+    auto moves_1 = Piece::legal_moves(chess_board, true );
+    Move expected_1 = {0, 6};
+    EXPECT_TRUE(std::find(moves_1.begin(), moves_1.end(), expected_1) != moves_1.end());
     chess_board.execute_move(best_move_1);
     chess_board.print_board();
+
     std::cout<<"best responce"<< "\n";
     auto best_responce = minimax.find_best_move_negamax(chess_board, 4, eval);
     chess_board.execute_move(best_responce);
     chess_board.print_board();
+
     std::cout<<"best move 2"<< "\n";
     auto best_move_2 = minimax.find_best_move_negamax(chess_board, 6, eval);
+    auto moves_2 = Piece::legal_moves(chess_board, true );
+    Move expected_2 = {8, 15};
+    EXPECT_TRUE(std::find(moves_2.begin(), moves_2.end(), expected_2) != moves_2.end());
     chess_board.execute_move(best_move_2);
     chess_board.print_board();
+
+    std::cout<<"best responce 2"<< "\n";
+    auto best_responce_2 = minimax.find_best_move_negamax(chess_board, 4, eval);
+    chess_board.execute_move(best_responce_2);
+    chess_board.print_board();
+
+    std::cout<<"best move 3"<< "\n";
+    auto best_move_3 = minimax.find_best_move_negamax(chess_board, 6, eval);
+    chess_board.execute_move(best_move_3);
+    chess_board.print_board();
+
 
 
     std::vector<Move> expected_moves = {
@@ -942,6 +1087,49 @@ TEST(BestMoveTest, test_mate_in_2){
     EXPECT_TRUE(std::find(expected_moves.begin(), expected_moves.end(), best_move_2) != expected_moves.end());
 
 }
+
+TEST(BestMoveTest, test_mate_in_2_position_validity){
+    board chess_board;
+
+    chess_board.set_piece(63, 'k'); // black king h8
+    chess_board.set_piece(7, 'K');  // white king h1
+    chess_board.set_piece(6, 'R');  // rook a1
+    chess_board.set_piece(8, 'R');  // rook a2
+
+    // Verify: White to move, should not already be mate
+    EXPECT_FALSE(Piece::is_mate(chess_board, false));
+    EXPECT_FALSE(Piece::is_mate(chess_board, true));
+
+    // Play the known first move: Ra1-a8+
+    chess_board.execute_move({8,15});
+    EXPECT_TRUE(Piece::is_in_check(chess_board, false));
+
+    // Enumerate black replies
+    auto black_moves = Piece::legal_moves(chess_board, false);
+    for(auto &m : black_moves){
+        board tmp = chess_board;
+        tmp.execute_move(m);
+        bool is_mate = Piece::is_mate(tmp, false);
+        EXPECT_TRUE(is_mate); // All black replies should lose
+    }
+}
+
+TEST(BestMoveTest, mate_score_depth_sensitive) {
+    board chess_board;
+    Minmax minimax;
+    Evaluator eval;
+
+    // Simple mate-in-1
+    chess_board.set_piece(59, 'k'); // black king e8
+    chess_board.set_piece(60, 'K'); // white king e1
+    chess_board.set_piece(55, 'Q'); // white queen h1 -> Qh5#
+
+    int score_m1 = minimax.negamax(chess_board, 1, -1000000, 1000000, eval, true, 0);
+    int score_m2 = minimax.negamax(chess_board, 2, -1000000, 1000000, eval, true, 0);
+
+    EXPECT_GT(score_m1, score_m2); // mate in 1 must be valued higher than mate in 2
+}
+
 
 /*
 TEST(BestMoveTest, test_mate_in_3){ //lichess puzzle #vc2Dc
