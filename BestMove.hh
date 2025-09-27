@@ -9,7 +9,7 @@
 #include <vector>
 #include <limits>
 #include <fstream>
-std::ofstream log("C:\\Users\\shaba\\Downloads\\engine_debug.txt");
+//std::ofstream log("C:\\Users\\shaba\\Downloads\\engine_debug.txt");
 struct move_record { //for undo
     int from;
     int to;
@@ -354,6 +354,7 @@ public:
 
 
     //For debugging
+    /*
     void print_board_in_file(board& b) const {
         log << "\n  +---+---+---+---+---+---+---+---+\n";
 
@@ -372,5 +373,6 @@ public:
 
         log << "    a   b   c   d   e   f   g   h\n\n";
     }
+     */
 };
 #endif // BESTMOVE_HH
