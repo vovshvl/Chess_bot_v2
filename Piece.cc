@@ -598,7 +598,8 @@ public:
         Bitboard attacks = EMPTY;
         const int r = sq / 8, f = sq % 8;
         const Bitboard our_pieces = is_white ? chess_board.get_white_pieces() : chess_board.get_black_pieces();
-        const Bitboard all_pieces = chess_board.get_all_pieces();
+        Bitboard king_bb = is_white? chess_board.get_white_king() : chess_board.get_black_king();
+        const Bitboard all_pieces = chess_board.get_all_pieces() & ~king_bb;
 
         for (int rank = r - 1, file = f - 1; rank >= 0 && file >= 0; --rank, --file) {
             const int target_sq = rank * 8 + file;
@@ -637,7 +638,8 @@ public:
     static Bitboard rook_attacks(int sq, bool is_white, const board& chess_board) {
         //To do check implementation, doesnt account for friendly figures
         Bitboard attacks = EMPTY;
-        Bitboard occupied = chess_board.get_all_pieces();
+        Bitboard king_bb = !is_white? chess_board.get_white_king() : chess_board.get_black_king();
+        Bitboard occupied = chess_board.get_all_pieces() & ~king_bb;
         Bitboard friendly = is_white? chess_board.get_white_pieces() : chess_board.get_black_pieces();
         int r = sq / 8, f = sq % 8;
 
@@ -672,7 +674,6 @@ public:
                 file += d;
             }
         }
-        //chess_board.print_different_board(attacks);
         return attacks;
     }
 
@@ -834,60 +835,6 @@ public:
         }
         return rays;
     }
-
-/*
-    static Bitboard castling(bool is_white, const board& board){
-        Bitboard kingside_castling = 0;
-        Bitboard queenside_castling = 0;
-        Bitboard result = 0;
-
-        //Getting mask where the bishops, knights and queen is standing, then AND with actually pieces
-        if (is_white) {
-            kingside_castling |= (1ULL << 5); // f1
-            kingside_castling |= (1ULL << 6); // g1
-            queenside_castling |= (1ULL << 1); // b1
-            queenside_castling |= (1ULL << 2); // c1
-            queenside_castling |= (1ULL << 3); // d1
-        } else {
-            kingside_castling |= (1ULL << 61); // f8
-            kingside_castling |= (1ULL << 62); // g8
-            queenside_castling |= (1ULL << 57); // b8
-            queenside_castling |= (1ULL << 58); // c8
-            queenside_castling |= (1ULL << 59); // d8
-        }
-
-        Bitboard all_pieces = board.get_all_pieces();
-
-        bool king_castle_flag = is_white? board.get_king_castle_white() : board.get_king_castle_black();
-        bool queen_castle_flag = is_white? board.get_queen_castle_white() : board.get_queen_castle_black();
-
-        if((!king_castle_flag and !queen_castle_flag) or is_in_check(board, is_white)){return 0ULL;}
-
-        if(((all_pieces & kingside_castling) == 0ULL) and king_castle_flag){
-            if(!is_attacked(board, 5, is_white) and !is_attacked(board, 6, is_white)){
-                result |= (1ULL << 6);
-            }
-        }
-        if(((all_pieces & queenside_castling) == 0ULL) and queen_castle_flag){
-            if(!is_attacked(board, 3, is_white) and !is_attacked(board, 2, is_white)){
-                result |= (1ULL << 2);
-            }
-        }
-        if(((all_pieces & kingside_castling) == 0ULL) and king_castle_flag){
-            if(!is_attacked(board, 61, is_white) and !is_attacked(board, 62, is_white)){
-                result |= (1ULL << 62);
-            }
-        }
-        if(((all_pieces & queenside_castling) == 0ULL) and queen_castle_flag){
-            if(!is_attacked(board, 59, is_white) and !is_attacked(board, 58, is_white)){
-                result |= (1ULL << 58);
-            }
-        }
-        return result;
-
-    }
-
-*/
 
 
     static Bitboard is_defended(int sq, bool is_white,const board& chess_board) {

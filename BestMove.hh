@@ -16,7 +16,7 @@ struct move_record { //for undo
     char captured_piece;   // 0 if no piece captured
     bool castling_rights[4]; // previous castling rights
 };
-constexpr int MATE_SCORE = 100000;
+constexpr int MATE_SCORE = 32000;
 
 class Minmax{
     using Bitboard = uint64_t;
@@ -190,6 +190,7 @@ public:
         //Mate/stalemate detection
         if(moves.empty()){
             if(piece.is_in_check(b, side_to_move)){
+                //std::cout << "Mate detected on half moves " << half_moves << "\n";
                 return -MATE_SCORE +half_moves;
             }
             else{
@@ -197,10 +198,6 @@ public:
             }
         }
 
-        /*
-        if (piece.is_mate(b, side_to_move))
-            return -100000 + half_moves;
-            */
 
         if(depth==0){
             return eval.evaluate(b,  side_to_move);
@@ -226,7 +223,6 @@ public:
             //alpzha beta prunning
             if (score > best_score) best_score = score;
             alpha = std::max(alpha, score);
-
             if (alpha >= beta) break;
         }
         return best_score;
@@ -248,6 +244,13 @@ public:
             int score = -negamax(b, depth - 1, -beta, -alpha, eval, !side_to_move, 1);
             //log << "Root move " << move.from << "->" << move.to << " score " << score << "\n";
             std::cout<< "Move after rek. " << move.from << "->" << move.to << " score " << score << "\n";
+            if (std::abs(score) > MATE_SCORE - 1000) { // heuristic: near mate range
+                int mate_in = (MATE_SCORE - std::abs(score));
+                if (score > 0)
+                    std::cout << " (mate in " << mate_in << ")";
+                else
+                    std::cout << " (mated in " << mate_in << ")";
+            }
             b.reverse_move(move);
 
 
