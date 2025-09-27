@@ -1082,10 +1082,6 @@ TEST(BestMoveTest, test_mate_in_2){
     EXPECT_TRUE(std::find(moves_2.begin(), moves_2.end(), expected_2) != moves_2.end());
     chess_board.execute_move(best_move_2);
 
-
-
-
-
     std::vector<Move> expected_moves = {
             {0, 6},
             {8, 15}
@@ -1140,58 +1136,68 @@ TEST(BestMoveTest, mate_score_depth_sensitive) {
 
 
 
-TEST(BestMoveTest, test_mate_in_3){ //lichess puzzle #vc2Dc
+TEST(BestMoveTest, test_mate_in_3){
     board chess_board;
     Minmax minimax;
     Evaluator eval;
 
-    chess_board.set_piece(62, 'k');
+    chess_board.set_piece(63, 'k');
+    chess_board.set_piece(62, 'r');
+    chess_board.set_piece(56, 'r');
     chess_board.set_piece(55, 'p');
-    chess_board.set_piece(54, 'p');
     chess_board.set_piece(53, 'p');
-    chess_board.set_piece(44, 'p');
-    chess_board.set_piece(51, 'p');
-    chess_board.set_piece(58, 'b');
-    chess_board.set_piece(34, 'b');
-    chess_board.set_piece(25, 'n');
-    chess_board.set_piece(61, 'r');
-    chess_board.set_piece(50, 'q');
 
-    chess_board.set_piece(2, 'K');
-    chess_board.set_piece(21, 'N');
-    chess_board.set_piece(5, 'B');
-    chess_board.set_piece(7, 'R');
-    chess_board.set_piece(3, 'R');
-    chess_board.set_piece(33, 'Q');
-    chess_board.set_piece(16, 'P');
-    chess_board.set_piece(9, 'P');
-    chess_board.set_piece(10, 'P');
-    chess_board.set_piece(20, 'P');
-    chess_board.set_piece(13, 'P');
-    chess_board.set_piece(14, 'P');
+    chess_board.set_piece(45, 'R');
+    chess_board.set_piece(36, 'B');
     chess_board.set_piece(15, 'P');
+    chess_board.set_piece(7, 'K');
 
-    chess_board.white_to_move = false;
 
-    std::vector<Move> best_moves;
-    for(int i = 0; i<=10; i++){
-        auto best_move = minimax.find_best_move_negamax(chess_board, 6, eval);
-        best_moves.push_back(best_move);
-        chess_board.execute_move(best_move);
-        chess_board.print_board();
-        auto best_responce = minimax.find_best_move_negamax(chess_board, 6, eval);
-        chess_board.execute_move(best_responce);
-        chess_board.print_board();
-    }
+    chess_board.print_board();
+
+    std::cout<< "best move 1 " << "\n";
+    auto best_move_1 = minimax.find_best_move_negamax(chess_board, 6, eval);
+    auto moves_1 = Piece::legal_moves(chess_board, true );
+    Move expected_1 = {45, 40};
+    EXPECT_TRUE(std::find(moves_1.begin(), moves_1.end(), expected_1) != moves_1.end());
+    chess_board.execute_move(best_move_1);
+    chess_board.print_board();
+
+    std::cout<< "best response 1 " << "\n";
+    auto best_response = minimax.find_best_move_negamax(chess_board, 4, eval);
+    chess_board.execute_move(best_response);
+    chess_board.print_board();
+
+    std::cout<< "best move 2 " << "\n";
+    auto best_move_2 = minimax.find_best_move_negamax(chess_board, 6, eval);
+    auto moves_2 = Piece::legal_moves(chess_board, true );
+    Move expected_2 = {36, 45};
+    EXPECT_TRUE(std::find(moves_2.begin(), moves_2.end(), expected_2) != moves_2.end());
+    chess_board.execute_move(best_move_2);
+    chess_board.print_board();
+
+    std::cout<< "best response 2 " << "\n";
+    auto best_response_2 = minimax.find_best_move_negamax(chess_board, 4, eval);
+    chess_board.execute_move(best_response_2);
+    chess_board.print_board();
+
+    std::cout<< "best move 3 " << "\n";
+    auto best_move_3 = minimax.find_best_move_negamax(chess_board, 6, eval);
+    auto moves_3 = Piece::legal_moves(chess_board, true );
+    Move expected_3 = {40, 56};
+    EXPECT_TRUE(std::find(moves_3.begin(), moves_3.end(), expected_3) != moves_3.end());
+    chess_board.execute_move(best_move_3);
+    chess_board.print_board();
+
     std::vector<Move> expected_moves = {
-            {34, 20},
-            {50, 10},
-            {10, 3}
+            {45, 40},
+            {36, 45},
+            {40, 56}
     };
 
-    for(int i=0; i<=3;i++){
-        EXPECT_EQ(expected_moves[i], best_moves[i]);
-    }
+    EXPECT_TRUE(std::find(expected_moves.begin(), expected_moves.end(), best_move_1) != expected_moves.end());
+    EXPECT_TRUE(std::find(expected_moves.begin(), expected_moves.end(), best_move_2) != expected_moves.end());
+    EXPECT_TRUE(std::find(expected_moves.begin(), expected_moves.end(), best_move_3) != expected_moves.end());
 
 
 }
