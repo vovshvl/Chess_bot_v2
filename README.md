@@ -17,3 +17,4 @@
     - works, but need move sorting(check, captures, development)
 12) Evaluate Board ✅(Further optimization is possible but not needed)
 13) reverse move fix(in cases of castling, promotion etc.)
+14) King move fix(he takes with check)
