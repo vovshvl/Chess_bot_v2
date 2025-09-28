@@ -190,7 +190,6 @@ public:
         //Mate/stalemate detection
         if(moves.empty()){
             if(piece.is_in_check(b, side_to_move)){
-                //std::cout << "Mate detected on half moves " << half_moves << "\n";
                 return -MATE_SCORE +half_moves;
             }
             else{
@@ -209,15 +208,9 @@ public:
             int new_depth = depth-1;
             //if (piece.is_in_check(b, !side_to_move))
             //new_depth = std::min(depth, new_depth + 1);
-
-            //log << "EXECUTE: " << move.from << "->" << move.to << ", side="
-                      //<< (side_to_move ? "white" : "black") << "\n";
-            //print_board_in_file(b);
             int score = -negamax(b, new_depth, -beta, -alpha, eval, !side_to_move, half_moves+1);
             //if(move.from==8) std::cout<<"Move from "<<move.from<<" to "<<move.to<<" score "<<score<< " "<<b.white_castled<<"\n";
             b.reverse_move(move);
-            //log << "REVERSE: " << move.from << "->" << move.to << "\n";
-            //print_board_in_file(b);
 
 
             //alpzha beta prunning
@@ -238,32 +231,16 @@ public:
 
         for (Move move : moves) {
             b.execute_move(move);
-            std::cout<< "Move before rek. " << move.from << "->" << move.to  << "\n";
-
-            //log << "Root move " << move.from << "->" << move.to << " score " << "\n";
             int score = -negamax(b, depth - 1, -beta, -alpha, eval, !side_to_move, 1);
-            //log << "Root move " << move.from << "->" << move.to << " score " << score << "\n";
-            std::cout<< "Move after rek. " << move.from << "->" << move.to << " score " << score << "\n";
-            if (std::abs(score) > MATE_SCORE - 1000) { // heuristic: near mate range
-                int mate_in = (MATE_SCORE - std::abs(score));
-                if (score > 0)
-                    std::cout << " (mate in " << mate_in << ")";
-                else
-                    std::cout << " (mated in " << mate_in << ")";
-            }
+            std::cout<< "Move after: "<< move.from << "->"<<move.to<< " score " << score << "\n";
             b.reverse_move(move);
-
-
-
             if (score > best_score) {
                 best_score = score;
                 best_move = move;
             }
-            /*
+
             alpha = std::max(alpha, best_score);
             if (alpha >= beta) break;
-             */
-
         }
 
         return best_move;
@@ -301,57 +278,6 @@ public:
         }
         return best_value;
     }
-
-    int negamax_no_ab(board& b, int depth, const Evaluator& eval, bool side_to_move, int half_moves) {
-        if (Piece::is_mate(b, side_to_move)) {
-            int mate_score = -MATE_SCORE + half_moves;
-            std::cout << "MATE DETECTED! side=" << (side_to_move ? "white" : "black")
-                      << " score=" << mate_score << " half_moves=" << half_moves << "\n";
-            return mate_score;
-        }
-        auto moves = piece.legal_moves(b, side_to_move);
-        if (moves.empty()) {
-            if (piece.is_in_check(b, side_to_move))
-                return -MATE_SCORE + half_moves;
-            else
-                return 0;
-        }
-        if (depth == 0) {
-            return eval.evaluate(b, side_to_move);
-        }
-
-        int best = -MATE_SCORE * 10;
-        for (auto m : moves) {
-            b.execute_move(m);
-            if (piece.is_in_check(b, side_to_move)) { b.reverse_move(m); continue; }
-            int val = -negamax_no_ab(b, depth - 1, eval, !side_to_move, half_moves + 1);
-            b.reverse_move(m);
-            if (val > best) best = val;
-        }
-        return best;
-    }
-
-    Move find_best_move_no_ab(board& b, int depth, const Evaluator& eval) {
-        bool side_to_move = b.white_to_move;
-        auto moves = piece.legal_moves(b, side_to_move);
-        int best_score = -MATE_SCORE * 10;
-        Move best_move = {-1,-1};
-        for (auto m : moves) {
-            b.execute_move(m);
-            std::cout<< "Move before rek. " << m.from << "->" << m.to  << "\n";
-            if (piece.is_in_check(b, side_to_move)) { b.reverse_move(m); continue; }
-            int score = -negamax_no_ab(b, depth - 1, eval, !side_to_move, 1);
-            std::cout<< "Move after rek. " << m.from << "->" << m.to << " score " << score << "\n";
-            b.reverse_move(m);
-            if (score > best_score) { best_score = score; best_move = m; }
-        }
-        return best_move;
-    }
-
-
-
-
-
 
     //For debugging
     /*

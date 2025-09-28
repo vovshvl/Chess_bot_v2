@@ -82,124 +82,23 @@ private:
 
 
 public:
-    /*
-     //original kirill version
-    static bool is_attacked(const board&  chess_board, int square,bool is_white) {
-
-        // Get all opponent pieces
-        Bitboard opponent_pawns = chess_board.get_pieces_by_value(is_white ? -1 : 1);
-        Bitboard opponent_knights = chess_board.get_pieces_by_value(is_white ? -2 : 2);
-        Bitboard opponent_bishops = chess_board.get_pieces_by_value(is_white ? -3 : 3);
-        Bitboard opponent_rooks = chess_board.get_pieces_by_value(is_white ? -4 : 4);
-        Bitboard opponent_queens = chess_board.get_pieces_by_value(is_white ? -5 : 5);
-        Bitboard opponent_king = chess_board.get_pieces_by_value(is_white ? -6 : 6);
-
-        if (pawn_attacks(square, !is_white) & opponent_pawns)
-            return true;
-
-        if (knight_attacks(square) & opponent_knights)
-            return true;
-
-        Bitboard bishop_queens = opponent_bishops | opponent_queens;
-        if (bishop_attacks(square,!is_white, chess_board) & bishop_queens)
-            return true;
-
-        Bitboard rook_queens = opponent_rooks | opponent_queens;
-        if (rook_attacks(square, chess_board) & rook_queens)
-            return true;
-
-        if (king_attacks(square) & opponent_king)
-            return true;
-
-        return false;
-    }
-
-
-    //passes double check but not is_in_check
     static bool is_attacked(const board& chess_board, int square, bool is_white) {
-        // Opponent color
-        bool opponent = !is_white;
-
-        // Pawn attacks
-        Bitboard opponent_pawns = opponent ? chess_board.get_black_pawns() : chess_board.get_white_pawns();
-        if (pawn_attacks(square, is_white) & opponent_pawns)
-            return true;
-
-        // Knight attacks
-        Bitboard opponent_knights = opponent ? chess_board.get_black_knights() : chess_board.get_white_knights();
-        if (knight_attacks(square) & opponent_knights)
-            return true;
-
-        // Bishop / Queen diagonal attacks
-        Bitboard opponent_bishops = opponent ? chess_board.get_black_bishops() : chess_board.get_white_bishops();
-        Bitboard opponent_queens  = opponent ? chess_board.get_black_queens()  : chess_board.get_white_queens();
-        Bitboard bishop_queens = opponent_bishops | opponent_queens;
-        if (bishop_attacks(square, is_white, chess_board) & bishop_queens)
-            return true;
-
-        // Rook / Queen straight attacks
-        Bitboard opponent_rooks = opponent ? chess_board.get_black_rooks() : chess_board.get_white_rooks();
-        Bitboard rook_queens = opponent_rooks | opponent_queens;
-        if (rook_attacks(square, chess_board) & rook_queens)
-            return true;
-
-        // King attacks
-        Bitboard opponent_king = opponent ? chess_board.get_black_king() : chess_board.get_white_king();
-        if (king_attacks(square) & opponent_king)
-            return true;
-
-        return false;
-    }
-
-    static bool is_attacked(const board& chess_board, int square, bool is_white_target) {
-        // Determine attacker color (opposite of target)
-        bool attacker_is_black = is_white_target;
-
-        // Pawn attacks - from the ATTACKER's perspective
-        Bitboard attacker_pawns = attacker_is_black ? chess_board.get_black_pawns() : chess_board.get_white_pawns();
-        // Key fix: pawn_attacks needs the attacker's color, not the target's
-        if (pawn_attacks(square, !attacker_is_black) & attacker_pawns)
-            return true;
-
-        // Knight attacks
-        Bitboard attacker_knights = attacker_is_black ? chess_board.get_black_knights() : chess_board.get_white_knights();
-        if (knight_attacks(square) & attacker_knights)
-            return true;
-
-        // Bishop / Queen diagonal attacks
-        Bitboard attacker_bishops = attacker_is_black ? chess_board.get_black_bishops() : chess_board.get_white_bishops();
-        Bitboard attacker_queens  = attacker_is_black ? chess_board.get_black_queens()  : chess_board.get_white_queens();
-        Bitboard bishop_queens = attacker_bishops | attacker_queens;
-        if (bishop_attacks(square, is_white_target, chess_board) & bishop_queens)
-            return true;
-
-        // Rook / Queen straight attacks
-        Bitboard attacker_rooks = attacker_is_black ? chess_board.get_black_rooks() : chess_board.get_white_rooks();
-        Bitboard rook_queens = attacker_rooks | attacker_queens;
-        if (rook_attacks(square, chess_board) & rook_queens)
-            return true;
-
-        // King attacks
-        Bitboard attacker_king = attacker_is_black ? chess_board.get_black_king() : chess_board.get_white_king();
-        if (king_attacks(square) & attacker_king)
-            return true;
-
-        return false;
-    }
-*/
-
-    static bool is_attacked(const board& chess_board, int square, bool is_white) {
-        // Correctly implemented static attacks
         Bitboard opponent_pawns = chess_board.get_pieces_by_value(is_white ? -1 : 1);
-        if (pawn_attacks(square, !is_white) & opponent_pawns)
-            return true;
+        std::vector<int> pawn_squares = bitboard_to_array(opponent_pawns);
+        for (int sq : pawn_squares) {
+            if (pawn_attacks(sq, !is_white) & get_bitboard_by_square(square))
+                return true;
+        }
 
         Bitboard opponent_knights = chess_board.get_pieces_by_value(is_white ? -2 : 2);
-        if (knight_attacks(square) & opponent_knights)
-            return true;
+        std::vector<int> knight_squares = bitboard_to_array(opponent_knights);
+        for (int sq : knight_squares) {
+            if (knight_attacks(sq) & get_bitboard_by_square(square))
+                return true;
+        }
 
         Bitboard opponent_king = chess_board.get_pieces_by_value(is_white ? -6 : 6);
-        if (king_attacks(square) & opponent_king)
+        if (king_attacks(__builtin_ctzll(opponent_king)) & get_bitboard_by_square(square))
             return true;
 
         // Correct logic for sliding pieces
@@ -650,8 +549,8 @@ public:
                 Bitboard mask = 1ULL << target_sq;
 
                 if (occupied & mask) {
-                    if (!(friendly & mask)) // enemy piece
-                        attacks |= mask;
+                    //if (!(friendly & mask)) // enemy piece
+                    attacks |= mask;
                     break; // stop either way
                 }
 
@@ -665,8 +564,8 @@ public:
                 Bitboard mask = 1ULL << target_sq;
 
                 if (occupied & mask) {
-                    if (!(friendly & mask)) // enemy piece
-                        attacks |= mask;
+                    //if (!(friendly & mask)) // enemy piece
+                    attacks |= mask;
                     break; // stop either way
                 }
 
@@ -674,7 +573,7 @@ public:
                 file += d;
             }
         }
-        return attacks;
+        return attacks ;
     }
 
 
@@ -800,18 +699,26 @@ public:
 
 
 
-    static Bitboard king_moves(int sq, bool is_white, const board& board) {
+    static Bitboard king_moves(int sq, bool is_white,const board& chess_board) {
         Bitboard moves = king_attacks(sq);
-        Bitboard own_pieces = is_white ? board.get_white_pieces() : board.get_black_pieces();
+        Bitboard own_pieces = is_white ? chess_board.get_white_pieces() : chess_board.get_black_pieces();
         moves &= ~own_pieces;
         Bitboard safe_moves = EMPTY;
         for (int target_sq : bitboard_to_array(moves)) {
-            if (!is_attacked(board, target_sq, is_white)) {
+            if (!is_attacked(chess_board, target_sq, is_white)) {
+                /*
+                board copy_board = chess_board;
+                copy_board.execute_move({sq, target_sq});
+                if(!is_in_check(copy_board, is_white)){
+                    safe_moves |= 1ULL << target_sq;
+                }
+                 */
+
                 safe_moves |= 1ULL << target_sq;
             }
         }
 
-        return safe_moves | castling(is_white, board);
+        return safe_moves | castling(is_white, chess_board);
     }
 
     static Bitboard king_rays(int king_sq) {

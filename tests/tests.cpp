@@ -761,6 +761,51 @@ TEST(PieceTest, test_king_stepping_into_check){
 
 }
 
+TEST(PieceTest, test_king_stepping_into_pawncheck){
+    board chess_board;
+
+    chess_board.set_piece(0, 'K');
+    chess_board.set_piece(1, 'P');
+    chess_board.set_piece(8, 'P');
+    chess_board.set_piece(16, 'k');
+
+    chess_board.print_board();
+
+    std::vector<Move> white_legal_moves = Piece::legal_moves(chess_board, true);
+    std::vector<Move> expected_moves = {
+            {1, 9}
+    };
+    std::sort(white_legal_moves.begin(), white_legal_moves.end());
+    std::sort(expected_moves.begin(), expected_moves.end());
+
+
+    EXPECT_EQ(white_legal_moves, expected_moves);
+
+}
+
+TEST(PieceTest, test_king_stepping_into_rookcheck){
+    board chess_board;
+
+    chess_board.set_piece(55, 'k');
+    chess_board.set_piece(6, 'R');
+    chess_board.set_piece(54, 'Q');
+
+    chess_board.print_board();
+
+    chess_board.white_to_move = false;
+
+    std::vector<Move> black_legal_moves = Piece::legal_moves(chess_board, false);
+    std::vector<Move> expected_moves = {
+    };
+    std::sort(black_legal_moves.begin(), black_legal_moves.end());
+    std::sort(expected_moves.begin(), expected_moves.end());
+
+    chess_board.print_different_board(Piece::rook_attacks(6, true, chess_board));
+
+    EXPECT_EQ(black_legal_moves, expected_moves);
+
+}
+
 TEST(PieceTest, test_king_moves_beeing_in_mate_black){
     board chess_board;
 
@@ -1030,6 +1075,45 @@ TEST(BestMoveTest, test_mate_in_one_for_black){ //lichess puzzle #msqFt
     EXPECT_TRUE(std::find(expected_moves.begin(), expected_moves.end(), best_move) != expected_moves.end());
 }
 
+TEST(BestMoveTest, test_mate_in_one_his_own_game){
+    board chess_board;
+    Minmax minimax;
+    Evaluator eval;
+
+    chess_board.set_piece(55, 'k');
+    chess_board.set_piece(39, 'p');
+    chess_board.set_piece(53, 'p');
+    chess_board.set_piece(51, 'p');
+    chess_board.set_piece(48, 'p');
+    chess_board.set_piece(40, 'p');
+    chess_board.set_piece(36, 'p');
+    chess_board.set_piece(60, 'q');
+    chess_board.set_piece(61, 'r');
+    chess_board.set_piece(26, 'r');
+
+    chess_board.set_piece(5, 'K');
+    chess_board.set_piece(6, 'R');
+    chess_board.set_piece(12, 'N');
+    chess_board.set_piece(6, 'R');
+    chess_board.set_piece(0, 'R');
+    chess_board.set_piece(45, 'Q');
+    chess_board.set_piece(8, 'P');
+    chess_board.set_piece(16, 'P');
+    chess_board.set_piece(15, 'P');
+    chess_board.set_piece(13, 'P');
+    chess_board.set_piece(20, 'P');
+    chess_board.set_piece(27, 'P');
+
+
+    auto best_move = minimax.find_best_move_negamax(chess_board, 4, eval);
+    std::vector<Move> expected_moves = {
+            {45, 54}
+    };
+
+
+    EXPECT_TRUE(std::find(expected_moves.begin(), expected_moves.end(), best_move) != expected_moves.end());
+}
+
 TEST(BestMoveTest, test_castling){
     board chess_board;
     Minmax minimax;
@@ -1156,7 +1240,7 @@ TEST(BestMoveTest, test_mate_in_3){
     chess_board.print_board();
 
     std::cout<< "best move 1 " << "\n";
-    auto best_move_1 = minimax.find_best_move_negamax(chess_board, 6, eval);
+    auto best_move_1 = minimax.find_best_move_negamax(chess_board, 8, eval);
     auto moves_1 = Piece::legal_moves(chess_board, true );
     Move expected_1 = {45, 40};
     EXPECT_TRUE(std::find(moves_1.begin(), moves_1.end(), expected_1) != moves_1.end());
@@ -1169,7 +1253,7 @@ TEST(BestMoveTest, test_mate_in_3){
     chess_board.print_board();
 
     std::cout<< "best move 2 " << "\n";
-    auto best_move_2 = minimax.find_best_move_negamax(chess_board, 6, eval);
+    auto best_move_2 = minimax.find_best_move_negamax(chess_board, 8, eval);
     auto moves_2 = Piece::legal_moves(chess_board, true );
     Move expected_2 = {36, 45};
     EXPECT_TRUE(std::find(moves_2.begin(), moves_2.end(), expected_2) != moves_2.end());
@@ -1182,7 +1266,7 @@ TEST(BestMoveTest, test_mate_in_3){
     chess_board.print_board();
 
     std::cout<< "best move 3 " << "\n";
-    auto best_move_3 = minimax.find_best_move_negamax(chess_board, 6, eval);
+    auto best_move_3 = minimax.find_best_move_negamax(chess_board, 8, eval);
     auto moves_3 = Piece::legal_moves(chess_board, true );
     Move expected_3 = {40, 56};
     EXPECT_TRUE(std::find(moves_3.begin(), moves_3.end(), expected_3) != moves_3.end());
@@ -1195,9 +1279,16 @@ TEST(BestMoveTest, test_mate_in_3){
             {40, 56}
     };
 
+    auto resp = minimax.find_best_move_negamax(chess_board, 4, eval);
+    chess_board.execute_move(resp);
+    chess_board.print_board();
+
+
     EXPECT_TRUE(std::find(expected_moves.begin(), expected_moves.end(), best_move_1) != expected_moves.end());
     EXPECT_TRUE(std::find(expected_moves.begin(), expected_moves.end(), best_move_2) != expected_moves.end());
     EXPECT_TRUE(std::find(expected_moves.begin(), expected_moves.end(), best_move_3) != expected_moves.end());
 
+    //Fix because he can move pinned piece
+    //EXPECT_TRUE(Piece::is_mate(chess_board, false));
 
 }
