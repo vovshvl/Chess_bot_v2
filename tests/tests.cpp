@@ -1105,7 +1105,7 @@ TEST(BestMoveTest, test_mate_in_one_his_own_game){
     chess_board.set_piece(27, 'P');
 
 
-    auto best_move = minimax.find_best_move_negamax(chess_board, 4, eval);
+    auto best_move = minimax.find_best_move_negamax(chess_board, 6, eval);
     std::vector<Move> expected_moves = {
             {45, 54}
     };
