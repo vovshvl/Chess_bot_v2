@@ -15,11 +15,13 @@ struct UndoInfo {
     bool king_castle_black, queen_castle_black = true;
     bool white_castled = false;
     bool black_castled = false;
+    int en_passant_square = -1;
 };
 struct Move {
     int from;
     int to;
     char promotion = '\0'; // '0' if no promotion, otherwise 'q','r','b','n'
+
     //bool castling; //ev. redo or better integrate
     //UndoInfo undo_info = {'.', '.', true, true, true, true};
 
@@ -69,6 +71,7 @@ public:
     std::vector<Move> history_moves;
 
     bool white_to_move = true; //For minmax
+    int en_passant_sq = -1;
 
 
     void init_board() {
@@ -391,6 +394,43 @@ public:
             // Normal move
             moving_piece_bitboard |= to_mask; //adds piece to to square
         }
+
+        // --- Handle en passant ---
+
+        /*
+        en_passant_sq = -1;
+        if (moving_piece == 'P' && from/8 == 1 && to/8 == 3) {
+            en_passant_sq = 2*8 + (from % 8);  // white pawn jumped, ep on rank 3
+        } else if (moving_piece == 'p' && from/8 == 6 && to/8 == 4) {
+            en_passant_sq = 4*8 + (from % 8);  // black pawn jumped, ep on rank 6
+        }
+        */
+
+        en_passant_sq = -1;
+        int file = to % 8;
+
+        if (moving_piece == 'P' && from/8 == 1 && to/8 == 3) {
+            if ((file > 0 && (black_pawn & (1ULL << (to - 1)))) ||
+                (file < 7 && (black_pawn & (1ULL << (to + 1))))) {
+                en_passant_sq = to;
+            }
+        }
+        else if (moving_piece == 'p' && from/8 == 6 && to/8 == 4) {
+            if ((file > 0 && (white_pawn & (1ULL << (to - 1)))) ||
+                (file < 7 && (white_pawn & (1ULL << (to + 1))))) {
+                en_passant_sq = to;
+            }
+        }
+
+        if (moving_piece == 'P' && captured_piece == '.' && abs(to % 8 - from % 8) == 1 && to/8 == 5) {
+            uint64_t captured_pawn_bb = 1ULL << (to - 8);
+            black_pawn &= ~captured_pawn_bb;
+        }
+        else if (moving_piece == 'p' && captured_piece == '.' && abs(to % 8 - from % 8) == 1 && to/8 == 2) {
+            uint64_t captured_pawn_bb = 1ULL << (to + 8);
+            white_pawn &= ~captured_pawn_bb;
+        }
+
     }
 
     void execute_move(const Move& m) {
@@ -404,6 +444,10 @@ public:
         undo.queen_castle_black = queen_castle_black;
         undo.white_castled = white_castled;
         undo.black_castled = black_castled;
+        if(en_passant_sq != -1){
+            undo.en_passant_square = en_passant_sq;
+            undo.captured_piece   = get_piece_at_square(en_passant_sq);
+        }
 
         execute_move_on_bitboard(m);
 
@@ -457,7 +501,14 @@ public:
 
         // Restore captured piece if any
         if (undo.captured_piece != '.') {
-            uint64_t cap_mask = 1ULL << to;
+            uint64_t cap_mask;
+            if(undo.en_passant_square != -1){
+                cap_mask = 1ULL << (m.to + (white_to_move ? -8 : 8));
+            }
+            else{
+                cap_mask = 1ULL << to;
+            }
+
             uint64_t& captured_bitboard = get_piece_bitboard_ref(undo.captured_piece);
             captured_bitboard |= cap_mask;
         }
@@ -469,6 +520,8 @@ public:
         queen_castle_black = undo.queen_castle_black;
         white_castled = undo.white_castled;
         black_castled = undo.black_castled;
+
+        en_passant_sq = undo.en_passant_square;
     }
 
 
@@ -486,6 +539,8 @@ public:
 
         // Undo the move on the bitboards
         reverse_move_on_bitboard(last_move, undo);
+
+
 
         white_to_move = !white_to_move;
         update_combined_bitboards();

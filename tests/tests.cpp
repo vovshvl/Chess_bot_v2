@@ -51,7 +51,7 @@ TEST(BoardTest, test_demogame){
             Move(5, 26),            // 3. Bf1-c4
 
     };
-    for (const auto& move : demo_moves){
+    for (auto& move : demo_moves){
         chess_board.execute_move({move.from, move.to, '\0'});
     }
     //dumb test
@@ -150,6 +150,7 @@ TEST(BoardTest, test_reverse_move_capture){
 
     chess_board.execute_move({7, 63, '\0'});
     chess_board.reverse_move({7,63,'\0'});
+
     for(int i=0;i<64; ++i){
         EXPECT_EQ(chess_board.get_piece_at_square(i), chess_board_before.get_piece_at_square(i));
     }
@@ -181,9 +182,65 @@ TEST(PieceTest, test_pawn_move){
     Bitboard white_moves = Piece::pawn_moves(white_pawn_sq, true, chess_board);
     Bitboard black_moves_1 = Piece::pawn_moves(black_pawn_sq_1, false, chess_board);
     Bitboard black_moves_2 = Piece::pawn_moves(black_pawn_sq_2, false, chess_board);
+    chess_board.print_different_board(white_moves);
     EXPECT_EQ(white_moves, white_result_moves);
     EXPECT_EQ(black_moves_1, black_result_moves_1);
     EXPECT_EQ(black_moves_2, black_result_moves_2);
+}
+
+TEST(PieceTest, test_legal_moves_en_passant){
+    board chess_board;
+
+    chess_board.set_piece(36, 'P');
+    chess_board.set_piece(51, 'p');
+
+    chess_board.execute_move({51, 35});
+
+    auto pawn_moves = Piece::legal_moves(chess_board, true);
+    Move en_passant = {36, 43};
+
+    EXPECT_TRUE(std::find(pawn_moves.begin(), pawn_moves.end(), en_passant) != pawn_moves.end());
+}
+
+TEST(BoardTest, test_execute_en_passant){
+    board chess_board;
+
+    chess_board.set_piece(36, 'P');
+    chess_board.set_piece(51, 'p');
+
+    chess_board.execute_move({51, 35});
+
+    chess_board.execute_move({36, 43});
+
+    board expected_chess_board;
+
+    expected_chess_board.set_piece(43, 'P');
+    for(int i=0;i<64; ++i){
+        EXPECT_EQ(chess_board.get_piece_at_square(i), expected_chess_board.get_piece_at_square(i));
+    }
+}
+
+TEST(BoardTest, test_reverse_en_passant){
+    board chess_board;
+
+
+    chess_board.set_piece(36, 'P');
+    chess_board.set_piece(51, 'p');
+
+
+
+    chess_board.execute_move({51, 35});
+
+    board copy_chess_board = chess_board;
+
+    chess_board.execute_move({36, 43});
+
+    chess_board.reverse_move({36, 43});
+
+    for(int i=0;i<64; ++i){
+        EXPECT_EQ(chess_board.get_piece_at_square(i), copy_chess_board.get_piece_at_square(i));
+    }
+    EXPECT_NE(chess_board.en_passant_sq, -1);
 }
 
 //knight_move test

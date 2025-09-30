@@ -596,6 +596,7 @@ public:
         Bitboard occupied = is_white ? board.get_black_pieces() : board.get_white_pieces();
         Bitboard all_occupied = board.get_all_pieces();
         Bitboard moves = 0ULL;
+        Bitboard attacks = pawn_attacks(sq, is_white);
 
         //single push
         Bitboard single_push = is_white ? (bb << 8) : (bb >> 8);
@@ -616,7 +617,18 @@ public:
             }
         }
 
-        return moves  | pawn_attacks(sq, is_white) & occupied;
+        //en passant handling
+        int ep_sq = board.en_passant_sq;
+
+        if (ep_sq != -1) {
+            ep_sq += (is_white? 8 : -8);
+            Bitboard ep_bb = 1ULL << (ep_sq);
+            moves |= ep_bb;
+
+        }
+
+
+        return moves  | attacks & occupied;
     }
 
     static Bitboard knight_moves(int sq,bool is_white,const board& board) {
