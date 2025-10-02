@@ -618,13 +618,19 @@ public:
         }
 
         //en passant handling
-        int ep_sq = board.en_passant_sq;
+        int ep_pawn_sq  = board.en_passant_sq;
 
-        if (ep_sq != -1) {
-            ep_sq += (is_white? 8 : -8);
-            Bitboard ep_bb = 1ULL << (ep_sq);
-            moves |= ep_bb;
-
+        if (ep_pawn_sq != -1) {
+            // landing square where the capturer would land
+            int landing = ep_pawn_sq + (is_white ? 8 : -8);
+            if (landing >= 0 && landing < 64) {
+                Bitboard landing_bb = 1ULL << landing;
+                // Only allow it if this pawn actually attacks that landing square
+                // and landing square is empty (it should be empty by rule).
+                if ((attacks & landing_bb) && ((board.get_all_pieces() & landing_bb) == 0ULL)) {
+                    moves |= landing_bb;
+                }
+            }
         }
 
 

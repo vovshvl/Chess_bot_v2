@@ -16,6 +16,8 @@ struct UndoInfo {
     bool white_castled = false;
     bool black_castled = false;
     int en_passant_square = -1;
+
+    int captured_square = -1;
 };
 struct Move {
     int from;
@@ -406,6 +408,17 @@ public:
         }
         */
 
+
+
+        if (moving_piece == 'P' && captured_piece == '.' && abs(to % 8 - from % 8) == 1 && to/8 == 5) {
+            uint64_t captured_pawn_bb = 1ULL << (to - 8);
+            black_pawn &= ~captured_pawn_bb;
+        }
+        else if (moving_piece == 'p' && captured_piece == '.' && abs(to % 8 - from % 8) == 1 && to/8 == 2) {
+            uint64_t captured_pawn_bb = 1ULL << (to + 8);
+            white_pawn &= ~captured_pawn_bb;
+        }
+
         en_passant_sq = -1;
         int file = to % 8;
 
@@ -422,15 +435,6 @@ public:
             }
         }
 
-        if (moving_piece == 'P' && captured_piece == '.' && abs(to % 8 - from % 8) == 1 && to/8 == 5) {
-            uint64_t captured_pawn_bb = 1ULL << (to - 8);
-            black_pawn &= ~captured_pawn_bb;
-        }
-        else if (moving_piece == 'p' && captured_piece == '.' && abs(to % 8 - from % 8) == 1 && to/8 == 2) {
-            uint64_t captured_pawn_bb = 1ULL << (to + 8);
-            white_pawn &= ~captured_pawn_bb;
-        }
-
     }
 
     void execute_move(const Move& m) {
@@ -444,9 +448,18 @@ public:
         undo.queen_castle_black = queen_castle_black;
         undo.white_castled = white_castled;
         undo.black_castled = black_castled;
-        if(en_passant_sq != -1){
-            undo.en_passant_square = en_passant_sq;
-            undo.captured_piece   = get_piece_at_square(en_passant_sq);
+
+        undo.en_passant_square = en_passant_sq;
+        undo.captured_square = (undo.captured_piece != '.') ? m.to : -1;
+
+        if (undo.en_passant_square != -1 && (undo.moving_piece == 'P' || undo.moving_piece == 'p')) {
+            int prev_ep = undo.en_passant_square;
+            int expected_landing = prev_ep + (undo.moving_piece == 'P' ? 8 : -8);
+            if (m.to == expected_landing && undo.captured_piece == '.') {
+                // it's an en-passant capture: the captured pawn lives on prev_ep
+                undo.captured_piece = (undo.moving_piece == 'P') ? 'p' : 'P';
+                undo.captured_square = prev_ep;
+            }
         }
 
         execute_move_on_bitboard(m);
@@ -502,11 +515,10 @@ public:
         // Restore captured piece if any
         if (undo.captured_piece != '.') {
             uint64_t cap_mask;
-            if(undo.en_passant_square != -1){
-                cap_mask = 1ULL << (m.to + (white_to_move ? -8 : 8));
-            }
-            else{
-                cap_mask = 1ULL << to;
+            if (undo.captured_square != -1) {
+                cap_mask = 1ULL << undo.captured_square;
+            } else {
+                cap_mask = 1ULL << to; // fallback
             }
 
             uint64_t& captured_bitboard = get_piece_bitboard_ref(undo.captured_piece);

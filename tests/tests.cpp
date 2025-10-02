@@ -1038,7 +1038,8 @@ TEST(BestMoveTest, test_opening_move) {
     Minmax minimax;
     Evaluator eval;
 
-    auto best_move = minimax.find_best_move_negamax(chess_board, 5, eval);
+    auto best_move = minimax.find_best_move_negamax(chess_board, 6, eval);
+    auto white_legal = Piece::legal_moves(chess_board, true);
 
     // In the initial position, e2-e4 or d2-d4 is likely best. Check that
     // the returned move is in a set of reasonable opening moves
