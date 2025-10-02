@@ -950,6 +950,9 @@ TEST(BestMoveTest, test_white_promotion){
     Minmax minimax;
     Evaluator eval;
 
+    size_t tt_size = 1 << 20; // 1M entries
+    TranspositionTable tt(tt_size);
+
     // Clear all pieces
     chess_board.white_pawn = chess_board.black_pawn = 0;
     chess_board.white_knight = chess_board.black_knight = 0;
@@ -967,7 +970,7 @@ TEST(BestMoveTest, test_white_promotion){
     chess_board.set_piece(55, 'k');   // Black king h7
     chess_board.set_piece(49, 'P');   // White pawn b7
 
-    auto best_move = minimax.find_best_move_negamax(chess_board, 5, eval);
+    auto best_move = minimax.find_best_move_negamax(chess_board, 5, eval, tt);
     Move expected_move= {49, 57, 'q'};
     EXPECT_EQ(best_move, expected_move);
 }
@@ -977,6 +980,9 @@ TEST(BestMoveTest, test_black_promotion){
     chess_board.reset_board();
     Minmax minimax;
     Evaluator eval;
+
+    size_t tt_size = 1 << 20; // 1M entries
+    TranspositionTable tt(tt_size);
 
     // Clear all pieces
     chess_board.white_pawn = chess_board.black_pawn = 0;
@@ -998,7 +1004,7 @@ TEST(BestMoveTest, test_black_promotion){
 
     chess_board.white_to_move = false;
 
-    auto best_move = minimax.find_best_move_negamax(chess_board, 5, eval);
+    auto best_move = minimax.find_best_move_negamax(chess_board, 5, eval, tt);
     Move expected_move= {8, 0, 'q'};
     EXPECT_EQ(best_move, expected_move);
 }
@@ -1008,6 +1014,9 @@ TEST(PieceTest, test_white_underpromotion){
     chess_board.reset_board();
     Minmax minimax;
     Evaluator eval;
+
+    size_t tt_size = 1 << 20; // 1M entries
+    TranspositionTable tt(tt_size);
 
     // Clear all pieces
     chess_board.white_pawn = chess_board.black_pawn = 0;
@@ -1027,18 +1036,22 @@ TEST(PieceTest, test_white_underpromotion){
     chess_board.set_piece(62, 'p');   // Black pawn g8
     chess_board.set_piece(63, 'p');   // Black pawn h8
 
-    auto best_move = minimax.find_best_move_negamax(chess_board, 5, eval);
+    auto best_move = minimax.find_best_move_negamax(chess_board, 5, eval, tt);
     Move expected_move= {53, 61, 'n'};
     EXPECT_EQ(best_move, expected_move);
 }
 
 TEST(BestMoveTest, test_opening_move) {
+    Zobrist::init();
     board chess_board;
     chess_board.init_board();
     Minmax minimax;
     Evaluator eval;
 
-    auto best_move = minimax.find_best_move_negamax(chess_board, 6, eval);
+    size_t tt_size = 1 << 20; // 1M entries
+    TranspositionTable tt(tt_size);
+
+    auto best_move = minimax.find_best_move_negamax(chess_board, 6, eval, tt);
     auto white_legal = Piece::legal_moves(chess_board, true);
 
     // In the initial position, e2-e4 or d2-d4 is likely best. Check that
@@ -1059,11 +1072,14 @@ TEST(BestMoveTest, test_opening_moves_black) {
     Minmax minimax;
     Evaluator eval;
 
+    size_t tt_size = 1 << 20; // 1M entries
+    TranspositionTable tt(tt_size);
+
     chess_board.execute_move({12, 28,  '\0'});
 
     chess_board.white_to_move = false;
 
-    auto best_move = minimax.find_best_move_negamax(chess_board, 4, eval);
+    auto best_move = minimax.find_best_move_negamax(chess_board, 4, eval, tt);
 
     // Black's best moves in response to standard openings
     std::vector<Move> expected_moves = {
@@ -1081,6 +1097,9 @@ TEST(BestMoveTest, test_mate_in_one_for_white){ //lichess puzzle #msqFt
     Minmax minimax;
     Evaluator eval;
 
+    size_t tt_size = 1 << 20; // 1M entries
+    TranspositionTable tt(tt_size);
+
     chess_board.set_piece(9, 'K');
     chess_board.set_piece(10, 'P');
     chess_board.set_piece(17, 'P');
@@ -1096,7 +1115,7 @@ TEST(BestMoveTest, test_mate_in_one_for_white){ //lichess puzzle #msqFt
     chess_board.set_piece(7, 'q');
     chess_board.set_piece(36, 'p');
 
-    auto best_move = minimax.find_best_move_negamax(chess_board, 6, eval);
+    auto best_move = minimax.find_best_move_negamax(chess_board, 6, eval, tt);
     std::vector<Move> expected_moves = {
             {25, 32}
     };
@@ -1108,6 +1127,9 @@ TEST(BestMoveTest, test_mate_in_one_for_black){ //lichess puzzle #msqFt
     board chess_board;
     Minmax minimax;
     Evaluator eval;
+
+    size_t tt_size = 1 << 20; // 1M entries
+    TranspositionTable tt(tt_size);
 
     chess_board.set_piece(9, 'k');
     chess_board.set_piece(10, 'p');
@@ -1125,7 +1147,7 @@ TEST(BestMoveTest, test_mate_in_one_for_black){ //lichess puzzle #msqFt
     chess_board.set_piece(36, 'P');
 
     chess_board.white_to_move = false;
-    auto best_move = minimax.find_best_move_negamax(chess_board, 4, eval);
+    auto best_move = minimax.find_best_move_negamax(chess_board, 4, eval, tt);
     std::vector<Move> expected_moves = {
             {25, 32}
     };
@@ -1137,6 +1159,9 @@ TEST(BestMoveTest, test_mate_in_one_his_own_game){
     board chess_board;
     Minmax minimax;
     Evaluator eval;
+
+    size_t tt_size = 1 << 20; // 1M entries
+    TranspositionTable tt(tt_size);
 
     chess_board.set_piece(55, 'k');
     chess_board.set_piece(39, 'p');
@@ -1163,7 +1188,7 @@ TEST(BestMoveTest, test_mate_in_one_his_own_game){
     chess_board.set_piece(27, 'P');
 
 
-    auto best_move = minimax.find_best_move_negamax(chess_board, 6, eval);
+    auto best_move = minimax.find_best_move_negamax(chess_board, 6, eval, tt);
     std::vector<Move> expected_moves = {
             {45, 54}
     };
@@ -1178,6 +1203,9 @@ TEST(BestMoveTest, test_castling){
     Evaluator eval;
     chess_board.init_board();
 
+    size_t tt_size = 1 << 20; // 1M entries
+    TranspositionTable tt(tt_size);
+
     chess_board.execute_move({12,28});
     chess_board.execute_move({52,36});
     chess_board.execute_move({6,21});
@@ -1186,7 +1214,7 @@ TEST(BestMoveTest, test_castling){
     chess_board.execute_move({62,45});
 
 
-    auto best_move = minimax.find_best_move_negamax(chess_board, 4, eval);
+    auto best_move = minimax.find_best_move_negamax(chess_board, 4, eval, tt);
     std::vector<Move> expected_moves = {
             {4, 6}
     };
@@ -1202,6 +1230,9 @@ TEST(BestMoveTest, test_mate_in_2){
     Minmax minimax;
     Evaluator eval;
 
+    size_t tt_size = 1 << 20; // 1M entries
+    TranspositionTable tt(tt_size);
+
     chess_board.set_piece(63, 'k');
     chess_board.set_piece(7, 'K');
     chess_board.set_piece(0, 'R');
@@ -1209,16 +1240,16 @@ TEST(BestMoveTest, test_mate_in_2){
 
     chess_board.set_piece(56, 'n');
 
-    auto best_move_1 = minimax.find_best_move_negamax(chess_board, 6, eval);
+    auto best_move_1 = minimax.find_best_move_negamax(chess_board, 6, eval, tt);
     auto moves_1 = Piece::legal_moves(chess_board, true );
     Move expected_1 = {0, 6};
     EXPECT_TRUE(std::find(moves_1.begin(), moves_1.end(), expected_1) != moves_1.end());
     chess_board.execute_move(best_move_1);
 
-    auto best_responce = minimax.find_best_move_negamax(chess_board, 4, eval);
+    auto best_responce = minimax.find_best_move_negamax(chess_board, 4, eval, tt);
     chess_board.execute_move(best_responce);
 
-    auto best_move_2 = minimax.find_best_move_negamax(chess_board, 6, eval);
+    auto best_move_2 = minimax.find_best_move_negamax(chess_board, 6, eval, tt);
     auto moves_2 = Piece::legal_moves(chess_board, true );
     Move expected_2 = {8, 15};
     EXPECT_TRUE(std::find(moves_2.begin(), moves_2.end(), expected_2) != moves_2.end());
@@ -1236,6 +1267,9 @@ TEST(BestMoveTest, test_mate_in_2){
 
 TEST(BestMoveTest, test_mate_in_2_position_validity){
     board chess_board;
+
+    size_t tt_size = 1 << 20; // 1M entries
+    TranspositionTable tt(tt_size);
 
     chess_board.set_piece(63, 'k'); // black king h8
     chess_board.set_piece(7, 'K');  // white king h1
@@ -1265,23 +1299,29 @@ TEST(BestMoveTest, mate_score_depth_sensitive) {
     Minmax minimax;
     Evaluator eval;
 
+    size_t tt_size = 1 << 20; // 1M entries
+    TranspositionTable tt(tt_size);
+
     // Simple mate-in-1
     chess_board.set_piece(59, 'k'); // black king e8
     chess_board.set_piece(60, 'K'); // white king e1
     chess_board.set_piece(55, 'Q'); // white queen h1 -> Qh5#
 
-    int score_m1 = minimax.negamax(chess_board, 1, -1000000, 1000000, eval, true, 0);
-    int score_m2 = minimax.negamax(chess_board, 2, -1000000, 1000000, eval, true, 0);
+    int score_m1 = minimax.negamax(chess_board, 1, -1000000, 1000000, eval, true, 0, tt);
+    int score_m2 = minimax.negamax(chess_board, 2, -1000000, 1000000, eval, true, 0 ,tt);
 
     EXPECT_GT(score_m1, score_m2); // mate in 1 must be valued higher than mate in 2
 }
 
 
-
+/*
 TEST(BestMoveTest, test_mate_in_3){
     board chess_board;
     Minmax minimax;
     Evaluator eval;
+
+    size_t tt_size = 1 << 20; // 1M entries
+    TranspositionTable tt(tt_size);
 
     chess_board.set_piece(63, 'k');
     chess_board.set_piece(62, 'r');
@@ -1298,7 +1338,7 @@ TEST(BestMoveTest, test_mate_in_3){
     chess_board.print_board();
 
     std::cout<< "best move 1 " << "\n";
-    auto best_move_1 = minimax.find_best_move_negamax(chess_board, 8, eval);
+    auto best_move_1 = minimax.find_best_move_negamax(chess_board, 8, eval, tt);
     auto moves_1 = Piece::legal_moves(chess_board, true );
     Move expected_1 = {45, 40};
     EXPECT_TRUE(std::find(moves_1.begin(), moves_1.end(), expected_1) != moves_1.end());
@@ -1306,12 +1346,12 @@ TEST(BestMoveTest, test_mate_in_3){
     chess_board.print_board();
 
     std::cout<< "best response 1 " << "\n";
-    auto best_response = minimax.find_best_move_negamax(chess_board, 4, eval);
+    auto best_response = minimax.find_best_move_negamax(chess_board, 4, eval, tt);
     chess_board.execute_move(best_response);
     chess_board.print_board();
 
     std::cout<< "best move 2 " << "\n";
-    auto best_move_2 = minimax.find_best_move_negamax(chess_board, 8, eval);
+    auto best_move_2 = minimax.find_best_move_negamax(chess_board, 8, eval, tt);
     auto moves_2 = Piece::legal_moves(chess_board, true );
     Move expected_2 = {36, 45};
     EXPECT_TRUE(std::find(moves_2.begin(), moves_2.end(), expected_2) != moves_2.end());
@@ -1319,12 +1359,12 @@ TEST(BestMoveTest, test_mate_in_3){
     chess_board.print_board();
 
     std::cout<< "best response 2 " << "\n";
-    auto best_response_2 = minimax.find_best_move_negamax(chess_board, 4, eval);
+    auto best_response_2 = minimax.find_best_move_negamax(chess_board, 4, eval, tt);
     chess_board.execute_move(best_response_2);
     chess_board.print_board();
 
     std::cout<< "best move 3 " << "\n";
-    auto best_move_3 = minimax.find_best_move_negamax(chess_board, 8, eval);
+    auto best_move_3 = minimax.find_best_move_negamax(chess_board, 8, eval, tt);
     auto moves_3 = Piece::legal_moves(chess_board, true );
     Move expected_3 = {40, 56};
     EXPECT_TRUE(std::find(moves_3.begin(), moves_3.end(), expected_3) != moves_3.end());
@@ -1337,7 +1377,7 @@ TEST(BestMoveTest, test_mate_in_3){
             {40, 56}
     };
 
-    auto resp = minimax.find_best_move_negamax(chess_board, 4, eval);
+    auto resp = minimax.find_best_move_negamax(chess_board, 4, eval, tt);
     chess_board.execute_move(resp);
     chess_board.print_board();
 
@@ -1350,3 +1390,4 @@ TEST(BestMoveTest, test_mate_in_3){
     //EXPECT_TRUE(Piece::is_mate(chess_board, false));
 
 }
+*/

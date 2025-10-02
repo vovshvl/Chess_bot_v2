@@ -13,6 +13,8 @@ add_executable(chess_bot_new
         BestMove.hh
         tests/MinmaxBenchmark.cc
         tests/Game.cc
+        Zobrist.hh
+        Zobrist.cc
 )
 
 enable_testing()
@@ -33,6 +35,8 @@ add_executable(chessbot_tests
         board.cc
         Move.cc
         ChessGameDemo.cc
+        Zobrist.hh
+        Zobrist.cc
 )
 
 target_link_libraries(chessbot_tests

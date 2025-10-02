@@ -7,6 +7,8 @@
 #include <iostream>
 #include <vector>
 #include "Move.hh"
+#include "Zobrist.hh"
+
 #define BOARD_HH
 struct UndoInfo {
     char captured_piece = '.';
@@ -37,6 +39,16 @@ struct Move {
         return from == other.from && to == other.to && promotion == other.promotion;
     }
 };
+
+struct TTEntry {
+    uint64_t zobrist_key; // full key for verification
+    int depth;            // search depth of the stored evaluation
+    int score;
+    uint8_t flag;         // EXACT / LOWERBOUND / UPPERBOUND
+    Move best_move;       // optional: best move from this position
+};
+
+
 
 class board {
 public:
@@ -74,6 +86,11 @@ public:
 
     bool white_to_move = true; //For minmax
     int en_passant_sq = -1;
+
+    Zobrist zobrist;
+    uint64_t zobrist_key = 0ULL;
+
+    board() { zobrist.init();}
 
 
     void init_board() {
@@ -123,7 +140,10 @@ public:
     
     void set_piece(int square, char piece) {
         uint64_t bit = 1ULL << square;
-        
+
+        char old_piece = get_piece_at_square(square); //XOR old piece from zobrist
+        xor_piece_square(old_piece, square);
+
         // Сначала очищаем поле
         clear_square(square);
 
@@ -141,6 +161,8 @@ public:
             case 'K': white_king |= bit; break;
             case 'k': black_king |= bit; break;
         }
+
+        xor_piece_square(piece, square); // XOR new piece into Zobrist
         
         update_combined_bitboards();
     }
@@ -338,8 +360,10 @@ public:
         char moving_piece   = get_piece_at_square(from);
         char captured_piece = get_piece_at_square(to);
 
-        uint64_t& moving_piece_bitboard = get_piece_bitboard_ref(moving_piece);
+        xor_piece_square(moving_piece, from);
+        xor_piece_square(captured_piece, to);
 
+        uint64_t& moving_piece_bitboard = get_piece_bitboard_ref(moving_piece);
 
         uint64_t from_mask = 1ULL << from;
         uint64_t to_mask   = 1ULL << to;
@@ -372,10 +396,23 @@ public:
         }
 
         // --- Update castling rights if king or rook moves ---
+        uint64_t old_castling_key = zobrist.castling_rights[
+                zobrist.castling_rights_index_zobrist(
+                        king_castle_white, queen_castle_white,
+                        king_castle_black, queen_castle_black)
+        ];
+
         if (moving_piece == 'K') king_castle_white = queen_castle_white = false;
         if (moving_piece == 'k') king_castle_black = queen_castle_black = false;
         if (moving_piece == 'R') { if (from == 0) queen_castle_white = false; if (from == 7) king_castle_white = false; }
         if (moving_piece == 'r') { if (from == 56) queen_castle_black = false; if (from == 63) king_castle_black = false; }
+
+        uint64_t new_castling_key = zobrist.castling_rights[
+                zobrist.castling_rights_index_zobrist(
+                        king_castle_white, queen_castle_white,
+                        king_castle_black, queen_castle_black)
+        ];
+        zobrist_key ^= old_castling_key ^ new_castling_key;
 
         //Remove captured piece
         if(captured_piece != '.') {
@@ -384,6 +421,8 @@ public:
 
         }
 
+
+
         moving_piece_bitboard &= ~from_mask; //remove piece from from square
 
         // --- Handle promotion separately ---
@@ -391,11 +430,13 @@ public:
             char promo_piece = isupper(moving_piece) ? toupper(promotion) : tolower(promotion);
             uint64_t& promotion_bitboard = get_piece_bitboard_ref(promo_piece);
             promotion_bitboard |= to_mask;
+            xor_piece_square(promo_piece, to);
 
         } else {
             // Normal move
             moving_piece_bitboard |= to_mask; //adds piece to to square
         }
+
 
         // --- Handle en passant ---
 
@@ -413,10 +454,17 @@ public:
         if (moving_piece == 'P' && captured_piece == '.' && abs(to % 8 - from % 8) == 1 && to/8 == 5) {
             uint64_t captured_pawn_bb = 1ULL << (to - 8);
             black_pawn &= ~captured_pawn_bb;
+            xor_piece_square('p', to-8);
         }
         else if (moving_piece == 'p' && captured_piece == '.' && abs(to % 8 - from % 8) == 1 && to/8 == 2) {
             uint64_t captured_pawn_bb = 1ULL << (to + 8);
             white_pawn &= ~captured_pawn_bb;
+            xor_piece_square('P', to+8);
+        }
+
+        if (en_passant_sq != -1) {
+            int file = en_passant_sq % 8;
+            zobrist_key ^= zobrist.en_passant_file[file];
         }
 
         en_passant_sq = -1;
@@ -433,6 +481,11 @@ public:
                 (file < 7 && (white_pawn & (1ULL << (to + 1))))) {
                 en_passant_sq = to;
             }
+        }
+
+        if (en_passant_sq != -1) {
+            int file = en_passant_sq % 8;
+            zobrist_key ^= zobrist.en_passant_file[file];
         }
 
     }
@@ -467,6 +520,7 @@ public:
         history_moves.push_back(m);
         history_info.push_back(undo);
 
+        zobrist_key ^= zobrist.side_to_move;
         white_to_move = !white_to_move;
         update_combined_bitboards();
     }
@@ -483,7 +537,10 @@ public:
         char moving_piece = (promotion != '\0') ? (isupper(undo.moving_piece) ? 'P' : 'p') : undo.moving_piece;
         uint64_t& moving_piece_bitboard = get_piece_bitboard_ref(moving_piece);
 
-
+        char piece_to_remove = promotion ? (isupper(undo.moving_piece) ? toupper(promotion) : tolower(promotion))
+                                         : undo.moving_piece;
+        xor_piece_square(piece_to_remove, to);
+        xor_piece_square(undo.moving_piece, from);
 
         // Undo castling rooks
         if (moving_piece == 'K' && from == 4) {
@@ -523,6 +580,7 @@ public:
 
             uint64_t& captured_bitboard = get_piece_bitboard_ref(undo.captured_piece);
             captured_bitboard |= cap_mask;
+            xor_piece_square(undo.captured_piece, undo.captured_square);
         }
 
         // Restore castling rights
@@ -534,6 +592,21 @@ public:
         black_castled = undo.black_castled;
 
         en_passant_sq = undo.en_passant_square;
+
+        zobrist_key ^= zobrist.castling_rights[zobrist.castling_rights_index_zobrist(
+                !undo.king_castle_white, !undo.queen_castle_white,
+                !undo.king_castle_black, !undo.queen_castle_black
+        )];
+        zobrist_key ^= zobrist.castling_rights[zobrist.castling_rights_index_zobrist(
+                king_castle_white, queen_castle_white,
+                king_castle_black, queen_castle_black
+        )];
+
+
+        if (en_passant_sq != -1) {
+            int file = en_passant_sq % 8;
+            zobrist_key ^= zobrist.en_passant_file[file];
+        }
     }
 
 
@@ -553,7 +626,7 @@ public:
         reverse_move_on_bitboard(last_move, undo);
 
 
-
+        zobrist_key ^= zobrist.side_to_move;
         white_to_move = !white_to_move;
         update_combined_bitboards();
     }
@@ -597,6 +670,7 @@ public:
 
         }
     };
+
     uint64_t get_pieces_by_char( const char character) const {
         switch (character) {
             case 'P': return get_white_pawns();
@@ -719,6 +793,39 @@ public:
         }
 
         return mask;
+    }
+
+    uint64_t  compute_zobrist_key() {
+        uint64_t key = 0ULL;
+
+
+        for (int sq = 0; sq < 64; ++sq) {
+            char piece = get_piece_at_square(sq);
+            if (piece == '.') continue;
+
+            int piece_index = zobrist.get_value_by_piece_zobrist(piece);
+            key ^= zobrist.piece_square[piece_index][sq];
+
+
+        }
+        key ^= zobrist.castling_rights[zobrist.castling_rights_index_zobrist(
+                king_castle_white, queen_castle_white,
+                king_castle_black, queen_castle_black)];
+
+        if(en_passant_sq != -1) {
+            int file = en_passant_sq % 8;
+            key ^= zobrist.en_passant_file[file];
+        }
+
+        if (white_to_move) key ^= Zobrist::side_to_move;
+
+        return key;
+    }
+
+    inline void xor_piece_square(char piece, int square) {
+        if (piece == '.') return;
+        int piece_index = zobrist.get_value_by_piece_zobrist(piece);
+        zobrist_key ^= zobrist.piece_square[piece_index][square];
     }
 
 
