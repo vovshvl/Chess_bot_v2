@@ -22,12 +22,12 @@ public:
 
         while(move_count<100){
             //b.white_to_move = true;
-            Move white_move = minimax.find_best_move_negamax(b, 6, eval, tt);
+            Move white_move = minimax.find_best_move_negamax(b, 8, eval, tt);
             b.execute_move({white_move.from, white_move.to, white_move.promotion});
             move_count++;
             b.print_board();
             //b.white_to_move = false;
-            Move black_move = minimax.find_best_move_negamax(b, 6, eval, tt);
+            Move black_move = minimax.find_best_move_negamax(b, 8, eval, tt);
             b.execute_move({black_move.from, black_move.to, black_move.promotion});
             move_count++;
             b.print_board();

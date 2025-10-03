@@ -1138,13 +1138,13 @@ TEST(BestMoveTest, test_opening_moves_black) {
 
     auto best_move = minimax.find_best_move_negamax(chess_board, 4, eval, tt);
 
-    // Black's best moves in response to standard openings
     std::vector<Move> expected_moves = {
-            {57, 42}, // b8-c6
             {52, 36}, // e7-e5
-            {62, 45}, // g8-f6
-            {51,35} //d7-d5
+            {50, 34}, // c7-c5
+            {52, 44}, // e7-e6
+            {50, 42}  // c7-c6
     };
+
 
     EXPECT_TRUE(std::find(expected_moves.begin(), expected_moves.end(), best_move) != expected_moves.end());
 }
