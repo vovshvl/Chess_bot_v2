@@ -194,6 +194,8 @@ TEST(PieceTest, test_legal_moves_en_passant){
     chess_board.set_piece(36, 'P');
     chess_board.set_piece(51, 'p');
 
+    chess_board.is_opening = false;
+
     chess_board.execute_move({51, 35});
 
     auto pawn_moves = Piece::legal_moves(chess_board, true);
@@ -204,6 +206,8 @@ TEST(PieceTest, test_legal_moves_en_passant){
 
 TEST(BoardTest, test_execute_en_passant){
     board chess_board;
+
+    chess_board.is_opening = false;
 
     chess_board.set_piece(36, 'P');
     chess_board.set_piece(51, 'p');
@@ -223,7 +227,7 @@ TEST(BoardTest, test_execute_en_passant){
 TEST(BoardTest, test_reverse_en_passant){
     board chess_board;
 
-
+    chess_board.is_opening = false;
     chess_board.set_piece(36, 'P');
     chess_board.set_piece(51, 'p');
 
@@ -247,6 +251,8 @@ TEST(BoardTest, test_reverse_en_passant){
 TEST(PieceTest, test_knight_move){
     board chess_board;
     chess_board.reset_board();
+
+    chess_board.is_opening = false;
 
     // Clear the board completely
     chess_board.white_pawn = chess_board.black_pawn = 0;
@@ -294,6 +300,7 @@ TEST(PieceTest, test_rook_attack){
     board chess_board;
     Piece p;
 
+    chess_board.is_opening = false;
     chess_board.set_piece(0, 'r');
     chess_board.set_piece(60, 'r');
     chess_board.set_piece(4, 'K');
@@ -307,6 +314,8 @@ TEST(PieceTest, test_rook_attack){
 TEST(PieceTest, test_rook_move) {
     board chess_board;
     chess_board.reset_board();
+
+    chess_board.is_opening = false;
 
     // Clear the board completely
     chess_board.white_pawn = chess_board.black_pawn = 0;
@@ -342,6 +351,8 @@ TEST(PieceTest, test_rook_move) {
 TEST(PieceTest, test_bishop_move) {
     board chess_board;
     chess_board.reset_board();
+    chess_board.is_opening = false;
+
     chess_board.white_pawn = chess_board.black_pawn = 0;
     chess_board.white_knight = chess_board.black_knight = 0;
     chess_board.white_bishop = chess_board.black_bishop = 0;
@@ -389,6 +400,8 @@ TEST(PieceTest, test_bishop_move) {
 TEST(PieceTest, test_attackers){
     board chess_board;
     chess_board.reset_board();
+    chess_board.is_opening = false;
+
     chess_board.white_pawn = chess_board.black_pawn = 0;
     chess_board.white_knight = chess_board.black_knight = 0;
     chess_board.white_bishop = chess_board.black_bishop = 0;
@@ -433,6 +446,8 @@ TEST(PieceTest, test_legal_moves_single_check_without_block) {
     board chess_board;
     chess_board.reset_board();
 
+    chess_board.is_opening = false;
+
     // Clear the board completely
     chess_board.white_pawn = chess_board.black_pawn = 0;
     chess_board.white_knight = chess_board.black_knight = 0;
@@ -466,6 +481,8 @@ TEST(PieceTest, test_legal_moves_single_check_with_block) {
     board chess_board;
     chess_board.reset_board();
 
+    chess_board.is_opening = false;
+
     // Clear the board completely
     chess_board.white_pawn = chess_board.black_pawn = 0;
     chess_board.white_knight = chess_board.black_knight = 0;
@@ -498,6 +515,8 @@ TEST(PieceTest, test_legal_moves_single_check_with_block) {
 TEST(PieceTest, test_legal_moves_double_check_with_block) {
     board chess_board;
     chess_board.reset_board();
+
+    chess_board.is_opening = false;
 
     // Clear the board completely
     chess_board.white_pawn = chess_board.black_pawn = 0;
@@ -533,6 +552,8 @@ TEST(PieceTest, test_legal_moves_double_check_with_block) {
 TEST(PieceTest, test_legal_moves_double_check_only_king_moves) {
     board chess_board;
 
+    chess_board.is_opening = false;
+
     // White king on e1
     chess_board.set_piece(4, 'K');
     // Black rooks delivering double check from e8 and a1
@@ -552,6 +573,8 @@ TEST(PieceTest, test_legal_moves_double_check_only_king_moves) {
 
 TEST(PieceTest, test_king_escape_double_check_with_pinned_pieces) {
     board chess_board;
+
+    chess_board.is_opening = false;
 
     // White king on e1
     chess_board.set_piece(4, 'K');
@@ -579,6 +602,8 @@ TEST(PieceTest, test_king_escape_double_check_with_pinned_pieces) {
 TEST(PieceTest, test_legal_moves_leaving_king_in_check_bishop){
     board chess_board;
 
+    chess_board.is_opening = false;
+
     chess_board.set_piece(63, 'r');
     chess_board.set_piece(7, 'K');
     chess_board.set_piece(15, 'B');
@@ -594,6 +619,8 @@ TEST(PieceTest, test_legal_moves_leaving_king_in_check_bishop){
 }
 TEST(PieceTest, test_legal_moves_leaving_king_in_check_queen){
     board chess_board;
+
+    chess_board.is_opening = false;
 
     chess_board.set_piece(63, 'r');
     chess_board.set_piece(48, 'r');
@@ -615,6 +642,8 @@ TEST(PieceTest, test_legal_moves_leaving_king_in_check_queen){
 TEST(PieceTest, test_pinned_piece_blocked) {
     board chess_board;
     chess_board.reset_board();
+
+    chess_board.is_opening = false;
 
     // White king on e1
     chess_board.set_piece(4, 'K');
@@ -640,6 +669,8 @@ TEST(BoardTest, test_mate) {
     board chess_board;
     chess_board.reset_board();
 
+    chess_board.is_opening = false;
+
     // Clear the board completely
     chess_board.white_pawn = chess_board.black_pawn = 0;
     chess_board.white_knight = chess_board.black_knight = 0;
@@ -664,6 +695,8 @@ TEST(BoardTest, test_mate) {
 TEST(PieceTest, test_castling) {
     board chess_board;
     chess_board.reset_board();
+
+    chess_board.is_opening = false;
 
     // Clear all pieces
     chess_board.white_pawn = chess_board.black_pawn = 0;
@@ -704,6 +737,8 @@ TEST(PieceTest, test_castling_with_king_moves) {
     board chess_board;
     chess_board.reset_board();
 
+    chess_board.is_opening = false;
+
     // Clear all pieces
     chess_board.white_pawn = chess_board.black_pawn = 0;
     chess_board.white_knight = chess_board.black_knight = 0;
@@ -737,6 +772,8 @@ TEST(PieceTest, test_castling_with_king_moves) {
 TEST(PieceTest, test_castling_with_rook_moves) {
     board chess_board;
     chess_board.reset_board();
+
+    chess_board.is_opening = false;
 
     // Clear all pieces
     chess_board.white_pawn = chess_board.black_pawn = 0;
@@ -772,6 +809,8 @@ TEST(PieceTest, test_king_moves) { //With castling, without moves
     board chess_board;
     chess_board.reset_board();
 
+    chess_board.is_opening = false;
+
     // Clear all pieces
     chess_board.white_pawn = chess_board.black_pawn = 0;
     chess_board.white_knight = chess_board.black_knight = 0;
@@ -802,6 +841,8 @@ TEST(PieceTest, test_king_moves) { //With castling, without moves
 TEST(PieceTest, test_king_stepping_into_check){
     board chess_board;
 
+    chess_board.is_opening = false;
+
     chess_board.set_piece(4, 'K');
     chess_board.set_piece(13, 'P');
     chess_board.set_piece(59, 'r');
@@ -820,6 +861,8 @@ TEST(PieceTest, test_king_stepping_into_check){
 
 TEST(PieceTest, test_king_stepping_into_pawncheck){
     board chess_board;
+
+    chess_board.is_opening = false;
 
     chess_board.set_piece(0, 'K');
     chess_board.set_piece(1, 'P');
@@ -842,6 +885,8 @@ TEST(PieceTest, test_king_stepping_into_pawncheck){
 
 TEST(PieceTest, test_king_stepping_into_rookcheck){
     board chess_board;
+
+    chess_board.is_opening = false;
 
     chess_board.set_piece(55, 'k');
     chess_board.set_piece(6, 'R');
@@ -866,6 +911,8 @@ TEST(PieceTest, test_king_stepping_into_rookcheck){
 TEST(PieceTest, test_king_moves_beeing_in_mate_black){
     board chess_board;
 
+    chess_board.is_opening = false;
+
     chess_board.set_piece(55, 'K');
     chess_board.set_piece(6, 'r');
     chess_board.set_piece(15, 'r');
@@ -889,6 +936,8 @@ TEST(PieceTest, test_white_promotion){
     chess_board.reset_board();
     Minmax minimax;
     Evaluator eval;
+
+    chess_board.is_opening = false;
 
     // Clear all pieces
     chess_board.white_pawn = chess_board.black_pawn = 0;
@@ -922,6 +971,8 @@ TEST(PieceTest, test_white_promotion){
 TEST(PieceTest, test_pawn_promotion_check) {
     board chess_board;
 
+    chess_board.is_opening = false;
+
     // White king safe
     chess_board.set_piece(4, 'k');
     // Black king far away
@@ -949,6 +1000,8 @@ TEST(BestMoveTest, test_white_promotion){
     chess_board.reset_board();
     Minmax minimax;
     Evaluator eval;
+
+    chess_board.is_opening = false;
 
     size_t tt_size = 1 << 20; // 1M entries
     TranspositionTable tt(tt_size);
@@ -980,6 +1033,8 @@ TEST(BestMoveTest, test_black_promotion){
     chess_board.reset_board();
     Minmax minimax;
     Evaluator eval;
+
+    chess_board.is_opening = false;
 
     size_t tt_size = 1 << 20; // 1M entries
     TranspositionTable tt(tt_size);
@@ -1036,6 +1091,8 @@ TEST(PieceTest, test_white_underpromotion){
     chess_board.set_piece(62, 'p');   // Black pawn g8
     chess_board.set_piece(63, 'p');   // Black pawn h8
 
+    chess_board.is_opening = false;
+
     auto best_move = minimax.find_best_move_negamax(chess_board, 5, eval, tt);
     Move expected_move= {53, 61, 'n'};
     EXPECT_EQ(best_move, expected_move);
@@ -1058,9 +1115,9 @@ TEST(BestMoveTest, test_opening_move) {
     // the returned move is in a set of reasonable opening moves
     std::vector<Move> expected_moves = {
             {12, 28}, // e2-e4
-            {12, 20}, // e2-e3
+            {10, 26}, // c2-c4
             {13, 29}, // d2-d4
-            {13, 21}  // d2-d3
+            {6, 21}  // g1-f3
     };
 
     EXPECT_TRUE(std::find(expected_moves.begin(), expected_moves.end(), best_move) != expected_moves.end());
@@ -1097,6 +1154,8 @@ TEST(BestMoveTest, test_mate_in_one_for_white){ //lichess puzzle #msqFt
     Minmax minimax;
     Evaluator eval;
 
+    chess_board.is_opening = false;
+
     size_t tt_size = 1 << 20; // 1M entries
     TranspositionTable tt(tt_size);
 
@@ -1127,6 +1186,8 @@ TEST(BestMoveTest, test_mate_in_one_for_black){ //lichess puzzle #msqFt
     board chess_board;
     Minmax minimax;
     Evaluator eval;
+    chess_board.is_opening = false;
+
 
     size_t tt_size = 1 << 20; // 1M entries
     TranspositionTable tt(tt_size);
@@ -1159,6 +1220,7 @@ TEST(BestMoveTest, test_mate_in_one_his_own_game){
     board chess_board;
     Minmax minimax;
     Evaluator eval;
+    chess_board.is_opening = false;
 
     size_t tt_size = 1 << 20; // 1M entries
     TranspositionTable tt(tt_size);
@@ -1229,6 +1291,7 @@ TEST(BestMoveTest, test_mate_in_2){
     board chess_board;
     Minmax minimax;
     Evaluator eval;
+    chess_board.is_opening = false;
 
     size_t tt_size = 1 << 20; // 1M entries
     TranspositionTable tt(tt_size);
@@ -1267,6 +1330,7 @@ TEST(BestMoveTest, test_mate_in_2){
 
 TEST(BestMoveTest, test_mate_in_2_position_validity){
     board chess_board;
+    chess_board.is_opening = false;
 
     size_t tt_size = 1 << 20; // 1M entries
     TranspositionTable tt(tt_size);
@@ -1298,6 +1362,7 @@ TEST(BestMoveTest, mate_score_depth_sensitive) {
     board chess_board;
     Minmax minimax;
     Evaluator eval;
+    chess_board.is_opening = false;
 
     size_t tt_size = 1 << 20; // 1M entries
     TranspositionTable tt(tt_size);
@@ -1314,11 +1379,12 @@ TEST(BestMoveTest, mate_score_depth_sensitive) {
 }
 
 
-/*
+
 TEST(BestMoveTest, test_mate_in_3){
     board chess_board;
     Minmax minimax;
     Evaluator eval;
+    chess_board.is_opening = false;
 
     size_t tt_size = 1 << 20; // 1M entries
     TranspositionTable tt(tt_size);
@@ -1390,4 +1456,4 @@ TEST(BestMoveTest, test_mate_in_3){
     //EXPECT_TRUE(Piece::is_mate(chess_board, false));
 
 }
-*/
+

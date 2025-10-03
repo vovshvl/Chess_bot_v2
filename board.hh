@@ -87,6 +87,8 @@ public:
     bool white_to_move = true; //For minmax
     int en_passant_sq = -1;
 
+    bool is_opening = true; //for opening book
+
     Zobrist zobrist;
     uint64_t zobrist_key = 0ULL;
 
@@ -520,6 +522,10 @@ public:
         history_moves.push_back(m);
         history_info.push_back(undo);
 
+        if(history_moves.size()==10){
+            is_opening = false;
+        }
+
         zobrist_key ^= zobrist.side_to_move;
         white_to_move = !white_to_move;
         update_combined_bitboards();
@@ -793,6 +799,21 @@ public:
         }
 
         return mask;
+    }
+
+    std::string squareToCoord(int sq) {
+        int file = sq % 8;   // 0 = a, 7 = h
+        int rank = sq / 8;   // 0 = rank 1, 7 = rank 8
+        std::string coord;
+        coord += char('a' + file);
+        coord += char('1' + rank);
+        return coord;
+    }
+
+    int coordToSquare(const std::string& coord) {
+        int file = coord[0] - 'a';  // 'a' → 0, 'h' → 7
+        int rank = coord[1] - '1';  // '1' → 0, '8' → 7
+        return rank * 8 + file;
     }
 
     uint64_t  compute_zobrist_key() {

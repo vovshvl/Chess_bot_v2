@@ -5,6 +5,7 @@
 #include "Move.hh"
 #include "Evaluator.hh"
 #include "Piece.cc"
+#include "OpeningBook.hh"
 
 #include <vector>
 #include <limits>
@@ -129,78 +130,103 @@ public:
 
         return best_move;
     }
-    // Benchmark minmax_with_alphabeta with counter
-    int minmax_benchmark(board& b, int depth, bool white_to_move,
-                         const Evaluator& eval, long long& counter,
-                         int alpha = -oo, int beta = oo) {
 
-        if (depth == 0) {
-            counter++;  // count evaluated leaf node
-            return eval.evaluate(b, white_to_move);
+    int negamax_benchmark(board& b, int depth, int alpha, int beta, const Evaluator& eval, bool side_to_move, int half_moves, TranspositionTable& tt, long long& nodes){
+        nodes++;
+        if(depth==0){
+            return eval.evaluate(b,  side_to_move);
+            //return quiescence(b, alpha, beta, side_to_move, eval, half_moves);
         }
-
-        auto moves = Piece::legal_moves(b, white_to_move);
-        Piece::sort_moves(moves, b, white_to_move);  // sort moves for better pruning
-
-        if (moves.empty()) {
-            counter++;
-            return eval.evaluate(b, white_to_move);
-        }
-
-        int best_score = white_to_move ? -oo : oo;
-
-        for (auto [from, to, promotion] : moves) {
-            char captured_piece = b.get_piece_at_square(to);
-            b.execute_move({from, to, promotion});
-
-            int score = minmax_benchmark(b, depth - 1, !white_to_move, eval, counter, alpha, beta);
-
-            b.reverse_move({from, to, captured_piece});
-
-            if (white_to_move) {
-                if (score > best_score) best_score = score;
-                if (best_score > alpha) alpha = best_score;
-            } else {
-                if (score < best_score) best_score = score;
-                if (best_score < beta) beta = best_score;
+        //Cache try
+        if (TTEntry* entry = tt.probe(b)) {
+            if (entry->depth >= depth) {
+                if (entry->flag == 0) return entry->score;       // exact
+                if (entry->flag == 1) alpha = std::max(alpha, entry->score); // lower bound
+                if (entry->flag == 2) beta  = std::min(beta, entry->score);  // upper bound
+                if (alpha >= beta) return entry->score;
             }
-            if (alpha >= beta) break;  // pruning
         }
+        //int best_score = -oo;
+        int best_score = -MATE_SCORE * 10;
+        std::vector<Move> moves = piece.legal_moves(b,  side_to_move);
+        Piece::sort_moves(moves, b,  side_to_move);
+        int alpha_orig = alpha;
+        Move best_move_in_this_node = {-1, -1};
+
+        //Prioritize the historicaly strongest move
+        if (TTEntry* entry = tt.probe(b)) {
+            if (entry->best_move.from != -1) {
+                auto it = std::find_if(moves.begin(), moves.end(),
+                                       [&](const Move& m){ return m == entry->best_move; });
+                if (it != moves.end()) {
+                    std::swap(moves[0], *it);  // move TT move to front
+                }
+            }
+        }
+
+        //Mate/stalemate detection
+        if(moves.empty()){
+            if(piece.is_in_check(b, side_to_move)){
+                return -MATE_SCORE +half_moves;
+            }
+            else{
+                return 0;
+            }
+        }
+
+
+
+
+        for(Move move : moves){
+            b.execute_move(move);
+            int new_depth = depth-1;
+            //if (piece.is_in_check(b, !side_to_move))
+            //new_depth = std::min(depth, new_depth + 1);
+            int score = -negamax_benchmark(b, new_depth, -beta, -alpha, eval, !side_to_move, half_moves+1, tt, nodes);
+            //if(move.from==8) std::cout<<"Move from "<<move.from<<" to "<<move.to<<" score "<<score<< " "<<b.white_castled<<"\n";
+            b.reverse_move(move);
+
+            if (score > best_score) {
+                best_score = score;
+                best_move_in_this_node = move; // track the best move
+            }
+
+
+            //alpzha beta prunning
+            if (score > best_score) best_score = score;
+            alpha = std::max(alpha, score);
+            if (alpha >= beta) break;
+        }
+        int flag;
+        if (best_score <= alpha_orig) flag = 2;    // upper bound
+        else if (best_score >= beta) flag = 1;     // lower bound
+        else flag = 0;                             // exact
+
+        tt.store(b, depth, best_score, flag, best_move_in_this_node);
 
         return best_score;
     }
+    Move find_best_move_negamax_benchmark(board& b, int depth, const Evaluator& eval, TranspositionTable& tt, long long& nodes, int alpha = -oo, int beta = oo) {
+        bool side_to_move = b.white_to_move;
+        auto moves = piece.legal_moves(b, side_to_move);
+        Piece::sort_moves(moves, b, side_to_move);
 
-    Move find_best_move_benchmark(board& b, int depth, bool white_to_move,
-                                                const Evaluator& eval, long long& counter,
-                                                int alpha = -oo, int beta = oo) {
-        auto moves = Piece::legal_moves(b, white_to_move);
-        Piece::sort_moves(moves, b, white_to_move);  // sort moves
+        //int best_score = -oo;
+        int best_score = -MATE_SCORE * 10;
+        Move best_move = {-1, -1};
 
-        int best_score = white_to_move ? -oo : oo;
-        Move best_move = {-1,-1};
-
-        for (auto [from, to, promotion] : moves) {
-            char captured_piece = b.get_piece_at_square(to);
-            b.execute_move({from, to, promotion});
-
-            int score = minmax_benchmark(b, depth - 1, !white_to_move, eval, counter, alpha, beta);
-
-            b.reverse_move({from, to, captured_piece});
-
-            if (white_to_move) {
-                if (score > best_score) {
-                    best_score = score;
-                    best_move = {from, to, promotion};
-                }
-                if (best_score > alpha) alpha = best_score;
-            } else {
-                if (score < best_score) {
-                    best_score = score;
-                    best_move = {from, to, promotion};
-                }
-                if (best_score < beta) beta = best_score;
+        for (Move move : moves) {
+            b.execute_move(move);
+            int score = -negamax_benchmark(b, depth - 1, -beta, -alpha, eval, !side_to_move, 1, tt, nodes);
+            //std::cout<< "Move after: "<< move.from << "->"<<move.to<< " score " << score << "\n";
+            b.reverse_move(move);
+            if (score > best_score) {
+                best_score = score;
+                best_move = move;
             }
-            if (alpha >= beta) break;  // pruning
+
+            alpha = std::max(alpha, best_score);
+            if (alpha >= beta) break;
         }
 
         return best_move;
@@ -283,6 +309,15 @@ public:
     }
     Move find_best_move_negamax(board& b, int depth, const Evaluator& eval, TranspositionTable& tt, int alpha = -oo, int beta = oo) {
         bool side_to_move = b.white_to_move;
+
+        if(b.is_opening){
+            Move book_move = OpeningBook::getMove(b);
+            if (book_move.from != -1) {
+                return book_move; // play the book move immediately
+            }
+        }
+
+
         auto moves = piece.legal_moves(b, side_to_move);
         Piece::sort_moves(moves, b, side_to_move);
 

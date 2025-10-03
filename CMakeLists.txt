@@ -15,6 +15,8 @@ add_executable(chess_bot_new
         tests/Game.cc
         Zobrist.hh
         Zobrist.cc
+        OpeningBook.hh
+        OpeningBook.cc
 )
 
 enable_testing()
@@ -37,6 +39,8 @@ add_executable(chessbot_tests
         ChessGameDemo.cc
         Zobrist.hh
         Zobrist.cc
+        OpeningBook.hh
+        OpeningBook.cc
 )
 
 target_link_libraries(chessbot_tests

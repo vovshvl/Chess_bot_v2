@@ -24,29 +24,50 @@ public:
         std::vector<BenchmarkResult> results;
         test_board.init_board();
 
+        // Print table header once
+        std::cout << std::left
+                  << std::setw(6)  << "Depth"
+                  << std::setw(20) << "Positions Searched"
+                  << std::setw(15) << "Time (s)"
+                  << std::setw(20) << "Avg Time/Pos (us)"
+                  << std::setw(18) << "Positions/sec"
+                  << "\n";
+
+        std::cout << "----------------------------------------------------------------------------\n";
+
         for (int depth : depths) {
             long long positions = 0;
             TranspositionTable tt(tt_size);
 
             auto start = std::chrono::high_resolution_clock::now();
-            // call negamax root
-            minimax.find_best_move_negamax(test_board, depth, eval, tt);
+            minimax.find_best_move_negamax_benchmark(test_board, depth, eval, tt, positions);
             auto end = std::chrono::high_resolution_clock::now();
 
             std::chrono::duration<double> elapsed = end - start;
 
             BenchmarkResult r;
             r.depth = depth;
-            r.positions_searched = positions;  // optional: increment in negamax if you add counter
+            r.positions_searched = positions;
             r.time_single_move = elapsed.count();
             r.avg_time_per_position = positions > 0 ? elapsed.count() / positions : 0;
             r.positions_per_sec = positions > 0 ? positions / elapsed.count() : 0;
+
+            // Print the row immediately
+            std::cout << std::left
+                      << std::setw(6)  << r.depth
+                      << std::setw(20) << r.positions_searched
+                      << std::setw(15) << std::scientific << r.time_single_move
+                      << std::setw(20) << std::fixed << std::setprecision(3) << r.avg_time_per_position * 1e6
+                      << std::setw(18) << std::scientific << r.positions_per_sec
+                      << "\n";
+            std::cout.flush();
 
             results.push_back(r);
         }
 
         return results;
     }
+
 
     void print_results(const std::vector<BenchmarkResult>& results) {
         // Column headers
@@ -81,9 +102,8 @@ int minmaxBenchmark() {
     test_board.init_board();
     Evaluator eval;
 
-    std::vector<int> depths = {1, 2, 3 ,4, 5, 6, 7, 8};
+    std::vector<int> depths = {1, 2, 3 ,4, 5, 6, 7, 8, 9, 10};
     auto results = benchmark.run_depth_benchmarks(minimax, test_board, eval, depths);
-    benchmark.print_results(results);
 
     return 0;
 }
