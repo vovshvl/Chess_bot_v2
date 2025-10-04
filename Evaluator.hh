@@ -331,10 +331,10 @@ private:
 
         uint64_t white_king = b.get_white_king();
         if(b.white_castled){
-            score +=200;
+            score +=50;
         }
         else{
-            score -=150;
+            score -=25;
         }
 
         if (white_king) {
@@ -364,10 +364,10 @@ private:
 
         uint64_t black_king = b.get_black_king();
         if(b.black_castled){
-            score -=200;
+            score -=50;
         }
         else{
-            score +=150;
+            score +=25;
         }
         if (black_king) {
             int king_sq = lsb(black_king);

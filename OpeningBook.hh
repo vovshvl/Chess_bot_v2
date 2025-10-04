@@ -33,7 +33,7 @@ public:
         if (it != book.end()) {
             const std::vector<std::string>& options = it->second;
             int index = rand() % options.size();
-            std::string chosen = options[index];
+            std::string chosen = options[0];
 
             int from_square = chess_board.coordToSquare(chosen.substr(0, 2));
             int to_square   = chess_board.coordToSquare(chosen.substr(2, 2));

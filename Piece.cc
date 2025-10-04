@@ -966,9 +966,6 @@ public:
                 noisy.push_back(move);
             }
         }
-
-        //Check also noisy
-        if(chess_board.get_piece_at_square(8)=='R')noisy.push_back({8, 15});
         return noisy;
     }
 };
