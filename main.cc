@@ -3,7 +3,6 @@ int minmaxBenchmark();
 int game();
 
 int main() {
-    //minmaxBenchmark();
-    game();
+    minmaxBenchmark();
     return 0;
 }

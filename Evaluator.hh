@@ -3,8 +3,8 @@
 //
 
 #ifndef CHESS_BOT_NEW_ENGINE_HH
-
 #define CHESS_BOT_NEW_ENGINE_HH
+
 #include <array>
 #include <algorithm>
 #include "board.hh"
@@ -15,7 +15,7 @@ public:
     static inline int popcount(uint64_t x) noexcept {
         return __builtin_popcountll(x);
     }
-    //must be checked for being nonzero
+
     static inline int lsb(uint64_t x) noexcept {
         return __builtin_ctzll(x);
     }
@@ -31,107 +31,79 @@ private:
     static constexpr int QUEEN_VALUE = 900;
 
     static constexpr std::array<int16_t, 64> PAWN_PST = {
-         0,  0,  0,  0,  0,  0,  0,  0,
-        78, 83, 86, 73, 102, 82, 85, 90,
-         7, 29, 21, 44, 40, 31, 44, 7,
-        -17, 16, -2, 15, 14, 0, 15, -13,
-        -26, 3, 10, 9, 6, 1, 0, -23,
-        -22, 9, 5, -11, -10, -2, 3, -19,
-        -31, 8, -7, -37, -36, -14, 3, -31,
-         0, 0, 0, 0, 0, 0, 0, 0
+         0,   0,   0,   0,   0,   0,   0,   0,  // Rank 1
+        50,  50,  50,  50,  50,  50,  50,  50,  // Rank 2
+        10,  10,  20,  30,  30,  20,  10,  10,  // Rank 3
+         5,   5,  10,  25,  25,  10,   5,   5,  // Rank 4
+         0,   0,   0,  20,  20,   0,   0,   0,  // Rank 5
+         5,  -5, -10,   0,   0, -10,  -5,   5,  // Rank 6
+         5,  10,  10, -20, -20,  10,  10,   5,  // Rank 7
+         0,   0,   0,   0,   0,   0,   0,   0   // Rank 8
     };
-
-    /*
-    int PAWN_PST[64] = {
-            0,0,0,0,0,0,0,0,     // rank 1
-            5,5,5,5,5,5,5,5,     // rank 2
-            10,10,10,10,10,10,10,10, // rank 3
-            20,20,20,20,20,20,20,20, // rank 4
-            20,20,20,20,20,20,20,20, // rank 5
-            10,10,10,10,10,10,10,10, // rank 6
-            5,5,5,5,5,5,5,5,         // rank 7
-            0,0,0,0,0,0,0,0          // rank 8
-    };
-     */
 
     static constexpr std::array<int16_t, 64> KNIGHT_PST = {
-        -66, -53, -75, -75, -10, -55, -58, -70,
-        -3, -6, 100, -36, 4, 62, -4, -14,
-        10, 67, 1, 74, 73, 27, 62, -2,
-        24, 24, 45, 37, 33, 41, 25, 17,
-        -1, 5, 31, 21, 22, 35, 2, 0,
-        -18, 10, 13, 22, 18, 15, 11, -14,
-        -23, -15, 2, 0, 2, 0, -23, -20,
-        -74, -23, -26, -24, -19, -35, -22, -69
+        -50, -40, -30, -30, -30, -30, -40, -50,
+        -40, -20,   0,   0,   0,   0, -20, -40,
+        -30,   0,  10,  15,  15,  10,   0, -30,
+        -30,   5,  15,  20,  20,  15,   5, -30,
+        -30,   0,  15,  20,  20,  15,   0, -30,
+        -30,   5,  10,  15,  15,  10,   5, -30,
+        -40, -20,   0,   5,   5,   0, -20, -40,
+        -50, -40, -30, -30, -30, -30, -40, -50
     };
 
     static constexpr std::array<int16_t, 64> BISHOP_PST = {
-        -59, -78, -82, -76, -23, -107, -37, -50,
-        -11, 20, 35, -42, -39, 31, 2, -22,
-        -9, 39, -32, 41, 52, -10, 28, -14,
-        25, 17, 20, 34, 26, 25, 15, 10,
-        13, 10, 17, 23, 17, 16, 0, 7,
-        14, 25, 24, 15, 8, 25, 20, 15,
-        19, 20, 11, 6, 7, 6, 20, 16,
-        -7, 2, -15, -12, -14, -15, -10, -10
+        -20, -10, -10, -10, -10, -10, -10, -20,
+        -10,   0,   0,   0,   0,   0,   0, -10,
+        -10,   0,   5,  10,  10,   5,   0, -10,
+        -10,   5,   5,  10,  10,   5,   5, -10,
+        -10,   0,  10,  10,  10,  10,   0, -10,
+        -10,  10,  10,  10,  10,  10,  10, -10,
+        -10,   5,   0,   0,   0,   0,   5, -10,
+        -20, -10, -10, -10, -10, -10, -10, -20
     };
 
     static constexpr std::array<int16_t, 64> ROOK_PST = {
-        35, 29, 33, 4, 37, 33, 56, 50,
-        55, 29, 56, 67, 55, 62, 34, 60,
-        19, 35, 28, 33, 45, 27, 25, 15,
-        0, 5, 16, 13, 18, -4, -9, -6,
-        -28, -35, -16, -21, -13, -29, -46, -30,
-        -42, -28, -42, -25, -25, -35, -26, -46,
-        -53, -38, -31, -26, -29, -43, -44, -53,
-        -30, -24, -18, 5, -2, -18, -31, -32
+         0,   0,   0,   0,   0,   0,   0,   0,
+         5,  10,  10,  10,  10,  10,  10,   5,
+        -5,   0,   0,   0,   0,   0,   0,  -5,
+        -5,   0,   0,   0,   0,   0,   0,  -5,
+        -5,   0,   0,   0,   0,   0,   0,  -5,
+        -5,   0,   0,   0,   0,   0,   0,  -5,
+        -5,   0,   0,   0,   0,   0,   0,  -5,
+         0,   0,   0,   5,   5,   0,   0,   0
     };
-
     static constexpr std::array<int16_t, 64> QUEEN_PST = {
-        6, 1, -8, -104, 69, 24, 88, 26,
-        14, 32, 60, -10, 20, 76, 57, 24,
-        -2, 43, 32, 60, 72, 63, 43, 2,
-        1, -16, 22, 17, 25, 20, -13, -6,
-        -14, -15, -2, -5, -1, -10, -20, -22,
-        -30, -6, -13, -11, -16, -11, -16, -27,
-        -36, -18, 0, -19, -15, -8, -15, -21,
-        -39, -30, -31, -13, -31, -36, -34, -42
+        -20, -10, -10,  -5,  -5, -10, -10, -20,
+        -10,   0,   0,   0,   0,   0,   0, -10,
+        -10,   0,   5,   5,   5,   5,   0, -10,
+         -5,   0,   5,   5,   5,   5,   0,  -5,
+          0,   0,   5,   5,   5,   5,   0,  -5,
+        -10,   5,   5,   5,   5,   5,   0, -10,
+        -10,   0,   5,   0,   0,   0,   0, -10,
+        -20, -10, -10,  -5,  -5, -10, -10, -20
     };
-
 
     static constexpr std::array<int16_t, 64> KING_MG_PST = {
-        4, 54, 47, -99, -99, 60, 83, -62,
-        -32, 10, 55, 56, 56, 55, 10, 3,
-        -62, 12, -57, 44, -67, 28, 37, -31,
-        -55, 50, 11, -4, -19, 13, 0, -49,
-        -55, -43, -52, -28, -51, -47, -8, -50,
-        -47, -42, -43, -79, -64, -32, -29, -32,
-        -4, 3, -14, -50, -57, -18, 13, 4,
-        17, 30, -3, -14, 6, -1, 40, 18
+        -30, -40, -40, -50, -50, -40, -40, -30,
+        -30, -40, -40, -50, -50, -40, -40, -30,
+        -30, -40, -40, -50, -50, -40, -40, -30,
+        -30, -40, -40, -50, -50, -40, -40, -30,
+        -20, -30, -30, -40, -40, -30, -30, -20,
+        -10, -20, -20, -20, -20, -20, -20, -10,
+         20,  20,   0,   0,   0,   0,  20,  20,
+         20,  30,  10,   0,   0,  10,  30,  20
     };
 
-    /*
-    static constexpr std::array<int16_t, 64> KING_MG_PST = {
-            50,  200,  180, -400, -400,  220,  250, -150,
-            -100,   20,  150,  180,  180,  150,   20,   50,
-            -150,   30, -120,  120, -150,   80,   90, -100,
-            -120,   80,   20,  -20,  -50,   30,   10, -90,
-            -120,  -60,  -80,  -40,  -60,  -50,  -10, -80,
-            -80,  -70,  -60, -150, -120,  -60,  -50, -60,
-            -10,   20,  -30, -120, -150,  -40,   30,  10,
-            40,   60,  -10, -50,  10,   -5,   80,  50
-    };
-     */
-
-
+    // Endgame king PST - encourages centralization
     static constexpr std::array<int16_t, 64> KING_EG_PST = {
         -50, -40, -30, -20, -20, -30, -40, -50,
-        -30, -20, -10, 0, 0, -10, -20, -30,
-        -30, -10, 20, 30, 30, 20, -10, -30,
-        -30, -10, 30, 40, 40, 30, -10, -30,
-        -30, -10, 30, 40, 40, 30, -10, -30,
-        -30, -10, 20, 30, 30, 20, -10, -30,
-        -30, -30, 0, 0, 0, 0, -30, -30,
+        -30, -20, -10,   0,   0, -10, -20, -30,
+        -30, -10,  20,  30,  30,  20, -10, -30,
+        -30, -10,  30,  40,  40,  30, -10, -30,
+        -30, -10,  30,  40,  40,  30, -10, -30,
+        -30, -10,  20,  30,  30,  20, -10, -30,
+        -30, -30,   0,   0,   0,   0, -30, -30,
         -50, -30, -30, -30, -30, -30, -30, -50
     };
 
@@ -141,13 +113,14 @@ private:
         0x0808080808080808ULL, 0x1010101010101010ULL, 0x2020202020202020ULL,
         0x4040404040404040ULL, 0x8080808080808080ULL
     };
+
     static constexpr std::array<uint64_t, 8> RANK_MASKS = {
-            0x00000000000000FFULL, 0x000000000000FF00ULL,  0x0000000000FF0000ULL,
-            0x00000000FF000000ULL, 0x000000FF00000000ULL, 0x0000FF0000000000ULL,
-            0x00FF000000000000ULL, 0xFF00000000000000ULL
+        0x00000000000000FFULL, 0x000000000000FF00ULL, 0x0000000000FF0000ULL,
+        0x00000000FF000000ULL, 0x000000FF00000000ULL, 0x0000FF0000000000ULL,
+        0x00FF000000000000ULL, 0xFF00000000000000ULL
     };
 
-    // King safety masks - precomputed for maximum speed
+    // King safety masks
     static constexpr std::array<uint64_t, 64> KING_ZONE_MASKS = {
         0x0000000000000302ULL, 0x0000000000000705ULL, 0x0000000000000E0AULL, 0x0000000000001C14ULL,
         0x0000000000003828ULL, 0x0000000000007050ULL, 0x000000000000E0A0ULL, 0x000000000000C040ULL,
@@ -165,7 +138,7 @@ private:
         0x2838000000000000ULL, 0x5070000000000000ULL, 0xa0e0000000000000ULL, 0x40c0000000000000ULL
     };
 
-    // Pawn shield masks for each king position
+    // Pawn shield masks
     static constexpr std::array<uint64_t, 64> PAWN_SHIELD_MASKS = {
         0x0000000000000300ULL, 0x0000000000000700ULL, 0x0000000000000e00ULL, 0x0000000000001c00ULL,
         0x0000000000003800ULL, 0x0000000000007000ULL, 0x000000000000e000ULL, 0x000000000000c000ULL,
@@ -185,12 +158,15 @@ private:
         0x0000000000000000ULL, 0x0000000000000000ULL, 0x0000000000000000ULL, 0x0000000000000000ULL
     };
 
-
-
     static inline bool is_endgame(const board& b) noexcept {
-        uint64_t heavy_pieces = b.get_white_queens() | b.get_black_queens() |
-                               b.get_white_rooks() | b.get_black_rooks();
-        return popcount(heavy_pieces) <= 4; // Queens + rooks <= 4 pieces
+        // Better endgame detection: consider material value
+        int total_material = popcount(b.get_white_queens()) + popcount(b.get_black_queens());
+        total_material += (popcount(b.get_white_rooks()) + popcount(b.get_black_rooks())) * 2;
+        total_material += (popcount(b.get_white_bishops()) + popcount(b.get_black_bishops())) * 2;
+        total_material += (popcount(b.get_white_knights()) + popcount(b.get_black_knights())) * 2;
+
+        // Endgame if: no queens and <= 2 minor pieces per side, or low total material
+        return total_material <= 6;
     }
 
     int evaluate_material(const board& b) const noexcept {
@@ -211,6 +187,7 @@ private:
 
     int evaluate_pst(const board& b, bool endgame) const noexcept {
         int score = 0;
+        // White pieces
         uint64_t pieces = b.get_white_pawns();
         while (pieces) {
             score += PAWN_PST[lsb(pieces)];
@@ -245,6 +222,7 @@ private:
             score += endgame ? KING_EG_PST[lsb(pieces)] : KING_MG_PST[lsb(pieces)];
         }
 
+        // Black pieces (flip vertically with XOR 56)
         pieces = b.get_black_pawns();
         while (pieces) {
             score -= PAWN_PST[lsb(pieces) ^ 56];
@@ -288,38 +266,60 @@ private:
         uint64_t white_pawns = b.get_white_pawns();
         uint64_t black_pawns = b.get_black_pawns();
 
+        // Doubled pawns penalty
         for (int file = 0; file < 8; file++) {
             int white_count = popcount(white_pawns & FILE_MASKS[file]);
             int black_count = popcount(black_pawns & FILE_MASKS[file]);
 
-            if (white_count > 1) score -= 15 * (white_count - 1);
-            if (black_count > 1) score += 15 * (black_count - 1);
+            if (white_count > 1) score -= 10 * (white_count - 1);
+            if (black_count > 1) score += 10 * (black_count - 1);
+
+            // Isolated pawns penalty
+            uint64_t adjacent_files = 0ULL;
+            if (file > 0) adjacent_files |= FILE_MASKS[file - 1];
+            if (file < 7) adjacent_files |= FILE_MASKS[file + 1];
+
+            if ((white_pawns & FILE_MASKS[file]) && !(white_pawns & adjacent_files)) {
+                score -= 15;
+            }
+            if ((black_pawns & FILE_MASKS[file]) && !(black_pawns & adjacent_files)) {
+                score += 15;
+            }
         }
 
         return score;
     }
 
-    int evaluate_central_pawn(const board& b) const noexcept{
+    int evaluate_central_control(const board& b) const noexcept {
         int score = 0;
-        constexpr uint64_t CENTRAL_MASK = (1ULL << 27) | (1ULL << 28) | (1ULL << 35) | (1ULL << 36);
+
+        // Central squares (d4, e4, d5, e5)
+        constexpr uint64_t CENTER = 0x0000001818000000ULL;
+        // Extended center
+        constexpr uint64_t EXTENDED_CENTER = 0x00003C3C3C3C0000ULL;
+
         uint64_t white_pawns = b.get_white_pawns();
         uint64_t black_pawns = b.get_black_pawns();
 
-        int white_central_score = popcount(white_pawns & CENTRAL_MASK);
-        int black_central_score = popcount(black_pawns & CENTRAL_MASK);
+        score += popcount(white_pawns & CENTER) * 20;
+        score -= popcount(black_pawns & CENTER) * 20;
 
-        //int white_adv = 2*(popcount(white_pawns & RANK_MASKS[2])) + 4*(popcount(white_pawns & RANK_MASKS[3])) + 6*(popcount(white_pawns & RANK_MASKS[4])) + 8*popcount(white_pawns & RANK_MASKS[5]);
-        //int black_adv = 2*(popcount(black_pawns & RANK_MASKS[5])) + 4*popcount(black_pawns & RANK_MASKS[4]) + 6*popcount(black_pawns & RANK_MASKS[3]) + 8*popcount(black_pawns & RANK_MASKS[2]);
-        //return (white_central_score-black_central_score)*50+white_adv-black_adv;
-        return (white_central_score-black_central_score)*50;
+        score += popcount(white_pawns & EXTENDED_CENTER) * 5;
+        score -= popcount(black_pawns & EXTENDED_CENTER) * 5;
+
+        return score;
     }
 
     int evaluate_piece_bonuses(const board& b) const noexcept {
         int score = 0;
 
-        // Bishop pair
-        if (popcount(b.get_white_bishops()) >= 2) score += 30;
-        if (popcount(b.get_black_bishops()) >= 2) score -= 30;
+        // Bishop pair bonus
+        if (popcount(b.get_white_bishops()) >= 2) score += 50;
+        if (popcount(b.get_black_bishops()) >= 2) score -= 50;
+
+        // Rook on 7th rank bonus
+        score += popcount(b.get_white_rooks() & RANK_MASKS[6]) * 20;
+        score -= popcount(b.get_black_rooks() & RANK_MASKS[1]) * 20;
 
         return score;
     }
@@ -329,65 +329,71 @@ private:
 
         int score = 0;
 
+        // White king safety
         uint64_t white_king = b.get_white_king();
-        if(b.white_castled){
-            score +=50;
-        }
-        else{
-            score -=25;
+        if (b.white_castled) {
+            score += 40;
+        } else {
+            score -= 30;
         }
 
         if (white_king) {
             int king_sq = lsb(white_king);
 
+            // Pawn shield - WHITE KING: use square directly (no flip)
             uint64_t pawn_shield = b.get_white_pawns() & PAWN_SHIELD_MASKS[king_sq];
             int shield_pawns = popcount(pawn_shield);
-            score += shield_pawns * 15;
+            score += shield_pawns * 10;
 
-            uint64_t enemy_pieces = b.get_black_queens() | b.get_black_rooks();
-            if (enemy_pieces) {
+            // Enemy attacks on king zone - WHITE KING: use square directly
+            uint64_t enemy_heavy = b.get_black_queens() | b.get_black_rooks();
+            if (enemy_heavy) {
                 uint64_t king_zone = KING_ZONE_MASKS[king_sq];
-                int attackers = popcount(enemy_pieces & king_zone);
-                score -= attackers * 20;
+                int attackers = popcount(enemy_heavy & king_zone);
+                score -= attackers * 15;
             }
 
+            // Open files near king
             int king_file = king_sq % 8;
             for (int f = std::max(0, king_file - 1); f <= std::min(7, king_file + 1); f++) {
                 if (!(b.get_white_pawns() & FILE_MASKS[f])) {
-                    score -= 15;
+                    score -= 20;
                     if (b.get_black_rooks() & FILE_MASKS[f]) {
-                        score -= 25;
+                        score -= 30;
                     }
                 }
             }
         }
 
+        // Black king safety
         uint64_t black_king = b.get_black_king();
-        if(b.black_castled){
-            score -=50;
+        if (b.black_castled) {
+            score -= 40;
+        } else {
+            score += 30;
         }
-        else{
-            score +=25;
-        }
+
         if (black_king) {
             int king_sq = lsb(black_king);
 
+            // BLACK KING: MUST flip square with XOR 56 for BOTH shield and zone
             uint64_t pawn_shield = b.get_black_pawns() & PAWN_SHIELD_MASKS[king_sq ^ 56];
             int shield_pawns = popcount(pawn_shield);
-            score -= shield_pawns * 15;
+            score -= shield_pawns * 10;
 
-            uint64_t enemy_pieces = b.get_white_queens() | b.get_white_rooks();
-            if (enemy_pieces) {
+            uint64_t enemy_heavy = b.get_white_queens() | b.get_white_rooks();
+            if (enemy_heavy) {
                 uint64_t king_zone = KING_ZONE_MASKS[king_sq ^ 56];
-                int attackers = popcount(enemy_pieces & king_zone);
-                score += attackers * 20;
+                int attackers = popcount(enemy_heavy & king_zone);
+                score += attackers * 15;
             }
+
             int king_file = king_sq % 8;
             for (int f = std::max(0, king_file - 1); f <= std::min(7, king_file + 1); f++) {
                 if (!(b.get_black_pawns() & FILE_MASKS[f])) {
-                    score += 15;
+                    score += 20;
                     if (b.get_white_rooks() & FILE_MASKS[f]) {
-                        score += 25;
+                        score += 30;
                     }
                 }
             }
@@ -395,7 +401,6 @@ private:
 
         return score;
     }
-
 
 public:
     int evaluate(const board& b, bool white_to_move = true) const noexcept {
@@ -405,23 +410,16 @@ public:
         score += evaluate_pst(b, endgame);
         score += evaluate_piece_bonuses(b);
         score += evaluate_king_safety(b, endgame);
-        score += evaluate_central_pawn(b);
-
+        score += evaluate_central_control(b);
 
         if (!endgame) {
             score += evaluate_pawn_structure(b);
         }
 
-
-        //score += 10;
-        //std::cout<<"score: "<<score;
-        //std::cout<<"for board:";
-        //b.print_board();
-
-
-        return white_to_move? score: -score;
+        return white_to_move ? score : -score;
     }
 };
+
 extern Evaluator g_ultra_evaluator;
 int evaluate_position(const board& b, bool white_to_move = true) noexcept;
 
