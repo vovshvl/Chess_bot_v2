@@ -18,3 +18,8 @@
 12) Evaluate Board ✅(Further optimization is possible but not needed)
 13) reverse move fix(in cases of castling, promotion etc.)
 14) King move fix(he takes with check)
+15) For UCI:
+    - https://www.wbec-ridderkerk.nl/html/UCIProtocol.html
+    -  python3 lichess-bot.py --config config.yaml
+    -  g++ -O2 -std=c++17 main.cc UCIHandler.cc board.cc Evaluator.cc Move.cc OpeningBook.cc Piece.cc Zobrist.cc -o BOT_KS
+    -  position startpos moves
