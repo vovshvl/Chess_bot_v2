@@ -84,6 +84,8 @@ public:
     std::vector<UndoInfo> history_info; //For fast do and undo
     std::vector<Move> history_moves;
 
+    std::vector<uint64_t> board_hash_history;
+
     bool white_to_move = true; //For minmax
     int en_passant_sq = -1;
 
@@ -96,6 +98,10 @@ public:
 
 
     void init_board() {
+        white_to_move = true;
+        int en_passant_sq = -1;
+        bool is_opening = true;
+
         white_pawn = 0x000000000000FF00ULL;
         black_pawn = 0x00FF000000000000ULL;
 
@@ -517,7 +523,10 @@ public:
             }
         }
 
+
         execute_move_on_bitboard(m);
+
+        board_hash_history.push_back(zobrist_key);
 
         history_moves.push_back(m);
         history_info.push_back(undo);
@@ -626,7 +635,7 @@ public:
         UndoInfo undo = history_info.back();
         history_info.pop_back();
 
-
+        board_hash_history.pop_back();
 
         // Undo the move on the bitboards
         reverse_move_on_bitboard(last_move, undo);

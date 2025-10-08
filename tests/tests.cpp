@@ -1149,6 +1149,31 @@ TEST(BestMoveTest, test_opening_moves_black) {
     EXPECT_TRUE(std::find(expected_moves.begin(), expected_moves.end(), best_move) != expected_moves.end());
 }
 
+TEST(PieceTest, test_theefold_repetition){
+    board chess_board;
+
+    chess_board.set_piece(0, 'K');
+    chess_board.set_piece(63, 'k');
+    //chess_board.board_hash_history.push_back()
+    chess_board.execute_move({0, 1});
+    chess_board.execute_move({63, 62});
+    chess_board.execute_move({1,0});
+    chess_board.execute_move({62, 63});
+
+    chess_board.execute_move({0, 1});
+    chess_board.execute_move({63, 62});
+    chess_board.execute_move({1,0});
+    chess_board.execute_move({62, 63});
+
+    chess_board.execute_move({0, 1});
+    chess_board.execute_move({63, 62});
+    chess_board.execute_move({1,0});
+    chess_board.execute_move({62, 63});
+
+
+    EXPECT_TRUE(Piece::is_threefold_repetition(chess_board));
+}
+
 TEST(BestMoveTest, test_mate_in_one_for_white){ //lichess puzzle #msqFt
     board chess_board;
     Minmax minimax;
@@ -1455,5 +1480,31 @@ TEST(BestMoveTest, test_mate_in_3){
     //Fix because he can move pinned piece
     //EXPECT_TRUE(Piece::is_mate(chess_board, false));
 
+}
+
+TEST(BestMoveTest, test_game_d4c4){
+    board chess_board;
+    Minmax minimax;
+    Evaluator eval;
+    chess_board.is_opening = false;
+
+    size_t tt_size = 1 << 20; // 1M entries
+    TranspositionTable tt(tt_size);
+
+    chess_board.init_board();
+    chess_board.execute_move({chess_board.coordToSquare("d2"), chess_board.coordToSquare("d4")});
+    chess_board.execute_move({chess_board.coordToSquare("d7"), chess_board.coordToSquare("d5")});
+    chess_board.execute_move({chess_board.coordToSquare("c2"), chess_board.coordToSquare("c4")});
+    chess_board.print_board();
+    auto best_move = minimax.find_best_move_negamax(chess_board, 6, eval ,tt);
+    std::cout << chess_board.squareToCoord(best_move.from) << "->" << chess_board.squareToCoord(best_move.to) << std::endl;
+    /*
+    std::vector<Move> expected_moves = {
+            {chess_board.coordToSquare("d5"), chess_board.coordToSquare("c4")},
+            {chess_board.coordToSquare("c7"), chess_board.coordToSquare("c6")}
+    };
+
+    EXPECT_TRUE(std::find(expected_moves.begin(), expected_moves.end(), best_move) != expected_moves.end());
+     */
 }
 

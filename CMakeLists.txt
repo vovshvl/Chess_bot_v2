@@ -17,6 +17,8 @@ add_executable(chess_bot_new
         Zobrist.cc
         OpeningBook.hh
         OpeningBook.cc
+        UCIHandler.hh
+        UCIHandler.cc
 )
 
 enable_testing()
@@ -41,6 +43,8 @@ add_executable(chessbot_tests
         Zobrist.cc
         OpeningBook.hh
         OpeningBook.cc
+        UCIHandler.hh
+        UCIHandler.cc
 )
 
 target_link_libraries(chessbot_tests

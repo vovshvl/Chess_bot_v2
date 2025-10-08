@@ -968,4 +968,15 @@ public:
         }
         return noisy;
     }
+
+    static bool is_threefold_repetition(const board& b) {
+        //MAybe a redo, depending on interpretation of threefold repetition
+        int count = 0;
+        uint64_t current = b.zobrist_key;
+        for (uint64_t key : b.board_hash_history) {
+            if (key == current)
+                ++count;
+        }
+        return count >= 2; // current + 2 previous = 3 total
+    }
 };

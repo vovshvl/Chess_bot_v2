@@ -134,8 +134,8 @@ public:
     int negamax_benchmark(board& b, int depth, int alpha, int beta, const Evaluator& eval, bool side_to_move, int half_moves, TranspositionTable& tt, long long& nodes){
         nodes++;
         if(depth==0){
-            return eval.evaluate(b,  side_to_move);
-            //return quiescence(b, alpha, beta, side_to_move, eval, half_moves);
+            //return eval.evaluate(b,  side_to_move);
+            return quiescence(b, alpha, beta, side_to_move, eval, half_moves);
         }
         //Cache try
         if (TTEntry* entry = tt.probe(b)) {
@@ -275,6 +275,11 @@ public:
             }
         }
 
+        //Move repetition detection
+        if(Piece::is_threefold_repetition(b)){
+            return 0;
+        }
+
 
 
 
@@ -339,6 +344,10 @@ public:
             if (alpha >= beta) break;
         }
 
+        if(best_move.from == -1 && best_move.to == -1){
+            std::cout << "End of the game" << std::endl;
+            std::exit(0);
+        }
         return best_move;
     }
 
