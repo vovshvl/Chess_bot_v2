@@ -226,7 +226,7 @@ public:
         white_king   &= bit;
         black_king   &= bit;
     }
-
+    
     char get_piece_at_square(int square) const {
         uint64_t bit = 1ULL << square;
         
@@ -314,7 +314,78 @@ public:
             case 'k': black_king   &= ~mask; break;
         }
     }
+    void loadFEN(const std::string& fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") {
+    // Reset the board first
+    white_pawn = black_pawn = 0;
+    white_knight = black_knight = 0;
+    white_bishop = black_bishop = 0;
+    white_rook = black_rook = 0;
+    white_queen = black_queen = 0;
+    white_king = black_king = 0;
+    white_pieces = black_pieces = all_pieces = 0;
+    
+    // Parse FEN string
+    std::istringstream fen_stream(fen);
+    std::string piece_placement, active_color, castling_rights, en_passant, halfmove, fullmove;
+    
+    fen_stream >> piece_placement >> active_color >> castling_rights >> en_passant >> halfmove >> fullmove;
+    
 
+    int rank = 7; // Start from rank 8 (index 7)
+    int file = 0; // Start from file a (index 0)
+    
+    for (char c : piece_placement) {
+        if (c == '/') {
+            rank--;
+            file = 0;
+        } else if (isdigit(c)) {
+
+            file += (c - '0');
+        } else {
+            int square = rank * 8 + file;
+            set_piece_fast(square, c);
+            file++;
+        }
+    }
+    
+    // Parse active color
+    white_to_move = (active_color == "w");
+    
+    // Parse castling rights
+    king_castle_white = queen_castle_white = false;
+    king_castle_black = queen_castle_black = false;
+    
+    for (char c : castling_rights) {
+        switch (c) {
+            case 'K': king_castle_white = true; break;
+            case 'Q': queen_castle_white = true; break;
+            case 'k': king_castle_black = true; break;
+            case 'q': queen_castle_black = true; break;
+            case '-': break; // No castling rights
+        }
+    }
+    
+    // Parse en passant target square
+    if (en_passant == "-") {
+        en_passant_sq = -1;
+    } else {
+        en_passant_sq = coordToSquare(en_passant);
+    }
+    
+    // Update combined bitboards
+    update_combined_bitboards();
+    
+    // Compute zobrist hash
+    zobrist_key = compute_zobrist_key();
+    
+    // Clear history
+    history_info.clear();
+    history_moves.clear();
+    board_hash_history.clear();
+    
+    // Reset castling status
+    white_castled = black_castled = false;
+}
     // set_piece and then update_combined_bitboards separately for from and to was too slow
     inline void update_combined_bitboards_incremental(uint64_t from_mask, uint64_t to_mask,
                                                       char piece, bool is_capture, char captured_piece) {
