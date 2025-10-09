@@ -502,11 +502,6 @@ public:
                (((bb << 10) | (bb >> 6)) & ~(FILE_A | FILE_B));
     }
 
-    static Bitboard new_bishop_attacks(int sq, bool is_white, const board& board){
-        Bitboard bb = 1ULL << sq;
-        return 0;
-    }
-
     static Bitboard bishop_attacks(int sq, bool is_white, const board& chess_board) {
         Bitboard attacks = EMPTY;
         const int r = sq / 8, f = sq % 8;
