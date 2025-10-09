@@ -182,7 +182,6 @@ TEST(PieceTest, test_pawn_move){
     Bitboard white_moves = Piece::pawn_moves(white_pawn_sq, true, chess_board);
     Bitboard black_moves_1 = Piece::pawn_moves(black_pawn_sq_1, false, chess_board);
     Bitboard black_moves_2 = Piece::pawn_moves(black_pawn_sq_2, false, chess_board);
-    chess_board.print_different_board(white_moves);
     EXPECT_EQ(white_moves, white_result_moves);
     EXPECT_EQ(black_moves_1, black_result_moves_1);
     EXPECT_EQ(black_moves_2, black_result_moves_2);
@@ -307,8 +306,6 @@ TEST(PieceTest, test_rook_attack){
     chess_board.set_piece(12, 'R');
     chess_board.set_piece(63, 'k');
 
-    chess_board.print_different_board(p.rook_attacks(60, false, chess_board));
-    chess_board.print_different_board(p.rook_attacks(0, false, chess_board));
 }
 // rook_move test
 TEST(PieceTest, test_rook_move) {
@@ -390,8 +387,8 @@ TEST(PieceTest, test_bishop_move) {
     black_result_moves |= (1ULL << 31); // h4
 
 
-    Bitboard white_moves = Piece::bishop_attacks(27,true,  chess_board);
-    Bitboard black_moves = Piece::bishop_attacks(45,false, chess_board);
+    Bitboard white_moves = Piece::bishop_moves(27,true,  chess_board);
+    Bitboard black_moves = Piece::bishop_moves(45,false, chess_board);
 
     EXPECT_EQ(white_moves, white_result_moves);
     EXPECT_EQ(black_moves, black_result_moves);
@@ -586,8 +583,7 @@ TEST(PieceTest, test_king_escape_double_check_with_pinned_pieces) {
     // Black king far away
     chess_board.set_piece(63, 'k');
 
-    chess_board.print_different_board(Piece::rook_attacks(60, false, chess_board));
-    chess_board.print_different_board(Piece::rook_attacks(0, false, chess_board));
+
 
     std::vector<Move> white_moves = Piece::legal_moves(chess_board, true);
 
@@ -902,7 +898,7 @@ TEST(PieceTest, test_king_stepping_into_rookcheck){
     std::sort(black_legal_moves.begin(), black_legal_moves.end());
     std::sort(expected_moves.begin(), expected_moves.end());
 
-    chess_board.print_different_board(Piece::rook_attacks(6, true, chess_board));
+    //chess_board.print_different_board(Piece::rook_attacks(6, true, chess_board));
 
     EXPECT_EQ(black_legal_moves, expected_moves);
 
@@ -1296,7 +1292,7 @@ TEST(BestMoveTest, test_castling){
     chess_board.execute_move({12,28});
     chess_board.execute_move({52,36});
     chess_board.execute_move({6,21});
-    chess_board.execute_move({56,57});
+    chess_board.execute_move({57,42});
     chess_board.execute_move({5,33});
     chess_board.execute_move({62,45});
 
@@ -1468,9 +1464,11 @@ TEST(BestMoveTest, test_mate_in_3){
             {40, 56}
     };
 
+    /*
     auto resp = minimax.find_best_move_negamax(chess_board, 4, eval, tt);
     chess_board.execute_move(resp);
     chess_board.print_board();
+     */
 
 
     EXPECT_TRUE(std::find(expected_moves.begin(), expected_moves.end(), best_move_1) != expected_moves.end());
@@ -1482,7 +1480,7 @@ TEST(BestMoveTest, test_mate_in_3){
 
 }
 
-TEST(BestMoveTest, test_game_d4c4){
+TEST(BestMoveTets, test_mate_in_3_final_move){ //basically mate in 1
     board chess_board;
     Minmax minimax;
     Evaluator eval;
@@ -1491,11 +1489,54 @@ TEST(BestMoveTest, test_game_d4c4){
     size_t tt_size = 1 << 20; // 1M entries
     TranspositionTable tt(tt_size);
 
-    chess_board.init_board();
-    chess_board.execute_move({chess_board.coordToSquare("d2"), chess_board.coordToSquare("d4")});
-    chess_board.execute_move({chess_board.coordToSquare("d7"), chess_board.coordToSquare("d5")});
-    chess_board.execute_move({chess_board.coordToSquare("c2"), chess_board.coordToSquare("c4")});
+    chess_board.set_piece(chess_board.coordToSquare("h2"), 'P');
+    chess_board.set_piece(chess_board.coordToSquare("h1"), 'K');
+    chess_board.set_piece(chess_board.coordToSquare("a6"), 'R');
+    chess_board.set_piece(chess_board.coordToSquare("f6"), 'B');
+    chess_board.set_piece(chess_board.coordToSquare("a8"), 'r');
+    chess_board.set_piece(chess_board.coordToSquare("g7"), 'r');
+    chess_board.set_piece(chess_board.coordToSquare("h7"), 'p');
+    chess_board.set_piece(chess_board.coordToSquare("h8"), 'k');
+
     chess_board.print_board();
+
+    auto best_move = minimax.find_best_move_negamax(chess_board, 6, eval ,tt);
+    Move expected = {chess_board.coordToSquare("a6"), chess_board.coordToSquare("a8")};
+    std::cout << "best_move " << chess_board.squareToCoord(best_move.from) << "->" << chess_board.squareToCoord(best_move.to) << std::endl;
+
+    chess_board.execute_move(best_move);
+    chess_board.print_board();
+
+
+    /*
+    auto best_resp = minimax.find_best_move_negamax(chess_board, 6, eval ,tt);
+    auto rook_legal_moves = Piece::legal_moves(chess_board, false);
+    chess_board.execute_move(best_resp);
+    chess_board.print_board();
+     */
+
+    EXPECT_EQ(best_move, expected);
+    EXPECT_TRUE(Piece::is_mate(chess_board, false));
+}
+
+TEST(BestMoveTest, test_game_){
+    board chess_board;
+    Minmax minimax;
+    Evaluator eval;
+    chess_board.is_opening = false;
+
+    size_t tt_size = 1 << 20; // 1M entries
+    TranspositionTable tt(tt_size);
+
+    chess_board.set_piece(chess_board.coordToSquare("a7"), 'k');
+    chess_board.set_piece(chess_board.coordToSquare("h1"), 'K');
+    chess_board.set_piece(chess_board.coordToSquare("b7"), 'R');
+    chess_board.set_piece(chess_board.coordToSquare("e8"), 'R');
+    chess_board.set_piece(chess_board.coordToSquare("e4"), 'B');
+    chess_board.print_board();
+    chess_board.white_to_move = false;
+
+    auto legal_moves = Piece::legal_moves(chess_board, false);
     auto best_move = minimax.find_best_move_negamax(chess_board, 6, eval ,tt);
     std::cout << chess_board.squareToCoord(best_move.from) << "->" << chess_board.squareToCoord(best_move.to) << std::endl;
     /*

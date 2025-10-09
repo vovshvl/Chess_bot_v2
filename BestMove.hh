@@ -333,7 +333,7 @@ public:
         for (Move move : moves) {
             b.execute_move(move);
             int score = -negamax(b, depth - 1, -beta, -alpha, eval, !side_to_move, 1, tt);
-            //std::cout<< "Move after: "<< move.from << "->"<<move.to<< " score " << score << "\n";
+            std::cout<< "Move after: "<< move.from << "->"<<move.to<< " score " << score << "\n";
             b.reverse_move(move);
             if (score > best_score) {
                 best_score = score;

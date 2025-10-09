@@ -5,6 +5,7 @@
 #ifndef BOARD_HH
 #include <cstdint>
 #include <iostream>
+#include <sstream>
 #include <vector>
 #include "Move.hh"
 #include "Zobrist.hh"
