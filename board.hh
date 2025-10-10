@@ -603,7 +603,7 @@ public:
         history_moves.push_back(m);
         history_info.push_back(undo);
 
-        if(history_moves.size()==10){
+        if(history_moves.size()==4){
             is_opening = false;
         }
 

@@ -1482,7 +1482,7 @@ TEST(BestMoveTest, test_mate_in_3){
 
 }
 
-TEST(BestMoveTets, test_mate_in_3_final_move){ //basically mate in 1
+TEST(BestMoveTest, test_mate_in_3_final_move){ //basically mate in 1
     board chess_board;
     Minmax minimax;
     Evaluator eval;

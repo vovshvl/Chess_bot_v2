@@ -315,14 +315,14 @@ public:
     Move find_best_move_negamax(board& b, int depth, const Evaluator& eval, TranspositionTable& tt, int alpha = -oo, int beta = oo) {
         bool side_to_move = b.white_to_move;
 
-        /*
+
         if(b.is_opening){
             Move book_move = OpeningBook::getMove(b);
             if (book_move.from != -1) {
                 return book_move; // play the book move immediately
             }
         }
-         */
+
 
 
         auto moves = piece.legal_moves(b, side_to_move);
