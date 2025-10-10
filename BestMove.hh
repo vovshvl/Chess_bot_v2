@@ -315,12 +315,14 @@ public:
     Move find_best_move_negamax(board& b, int depth, const Evaluator& eval, TranspositionTable& tt, int alpha = -oo, int beta = oo) {
         bool side_to_move = b.white_to_move;
 
+        /*
         if(b.is_opening){
             Move book_move = OpeningBook::getMove(b);
             if (book_move.from != -1) {
                 return book_move; // play the book move immediately
             }
         }
+         */
 
 
         auto moves = piece.legal_moves(b, side_to_move);
@@ -333,7 +335,7 @@ public:
         for (Move move : moves) {
             b.execute_move(move);
             int score = -negamax(b, depth - 1, -beta, -alpha, eval, !side_to_move, 1, tt);
-            std::cout<< "Move after: "<< move.from << "->"<<move.to<< " score " << score << "\n";
+            //std::cout<< "Move after: "<< move.from << "->"<<move.to<< " score " << score << "\n";
             b.reverse_move(move);
             if (score > best_score) {
                 best_score = score;

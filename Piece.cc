@@ -599,7 +599,7 @@ public:
     }
 
     static Bitboard queen_attacks(int sq,bool is_white, board chess_board) {//
-        return bishop_attacks(sq,is_white, chess_board) | rook_moves(sq,is_white,chess_board );
+        return bishop_attacks(sq,is_white, chess_board) | rook_attacks(sq,is_white,chess_board );
     }
 
     static Bitboard pawn_moves(int sq, bool is_white,const board& board) { //need to redo
@@ -681,9 +681,10 @@ public:
 
     }
 
-    static Bitboard queen_moves(int sq, bool is_white,const board& board) {
+    static Bitboard queen_moves(int sq, bool is_white,const board& chess_board) {
         //To do check implementation, doesnt account for friendly figures
-        return queen_attacks(sq, is_white,board);
+        const Bitboard our_pieces = is_white ? chess_board.get_white_pieces() : chess_board.get_black_pieces();
+        return queen_attacks(sq, is_white,chess_board) & ~our_pieces;
     }
 
     static Bitboard castling(bool is_white, const board& board){

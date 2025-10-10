@@ -1519,7 +1519,7 @@ TEST(BestMoveTets, test_mate_in_3_final_move){ //basically mate in 1
     EXPECT_TRUE(Piece::is_mate(chess_board, false));
 }
 
-TEST(BestMoveTest, test_game_){
+TEST(BestMoveTest, test_game_4_with_bot){
     board chess_board;
     Minmax minimax;
     Evaluator eval;
@@ -1528,24 +1528,42 @@ TEST(BestMoveTest, test_game_){
     size_t tt_size = 1 << 20; // 1M entries
     TranspositionTable tt(tt_size);
 
-    chess_board.set_piece(chess_board.coordToSquare("a7"), 'k');
-    chess_board.set_piece(chess_board.coordToSquare("h1"), 'K');
-    chess_board.set_piece(chess_board.coordToSquare("b7"), 'R');
-    chess_board.set_piece(chess_board.coordToSquare("e8"), 'R');
-    chess_board.set_piece(chess_board.coordToSquare("e4"), 'B');
+    chess_board.loadFEN("rr5k/p1p1pp1p/2Q3pB/5q2/3P4/P1P1P3/3NBPKP/2R3R1 b - - 0 20");
+    /*
+    chess_board.set_piece(chess_board.coordToSquare("a3"), 'P');
+    chess_board.set_piece(chess_board.coordToSquare("c3"), 'P');
+    chess_board.set_piece(chess_board.coordToSquare("d4"), 'P');
+    chess_board.set_piece(chess_board.coordToSquare("e3"), 'P');
+    chess_board.set_piece(chess_board.coordToSquare("f2"), 'P');
+    chess_board.set_piece(chess_board.coordToSquare("h2"), 'P');
+    chess_board.set_piece(chess_board.coordToSquare("g2"), 'K');
+    chess_board.set_piece(chess_board.coordToSquare("g1"), 'R');
+    chess_board.set_piece(chess_board.coordToSquare("c1"), 'R');
+    chess_board.set_piece(chess_board.coordToSquare("e2"), 'B');
+    chess_board.set_piece(chess_board.coordToSquare("d2"), 'N');
+    chess_board.set_piece(chess_board.coordToSquare("h6"), 'B');
+    chess_board.set_piece(chess_board.coordToSquare("c6"), 'Q');
+
+    chess_board.set_piece(chess_board.coordToSquare("a7"), 'p');
+    chess_board.set_piece(chess_board.coordToSquare("c7"), 'p');
+    chess_board.set_piece(chess_board.coordToSquare("e7"), 'p');
+    chess_board.set_piece(chess_board.coordToSquare("f7"), 'p');
+    chess_board.set_piece(chess_board.coordToSquare("g6"), 'p');
+    chess_board.set_piece(chess_board.coordToSquare("h7"), 'p');
+    chess_board.set_piece(chess_board.coordToSquare("f5"), 'q');
+    chess_board.set_piece(chess_board.coordToSquare("a8"), 'r');
+    chess_board.set_piece(chess_board.coordToSquare("b8"), 'r');
+    chess_board.set_piece(chess_board.coordToSquare("h8"), 'k');
+     */
+
     chess_board.print_board();
     chess_board.white_to_move = false;
 
     auto legal_moves = Piece::legal_moves(chess_board, false);
     auto best_move = minimax.find_best_move_negamax(chess_board, 6, eval ,tt);
-    std::cout << chess_board.squareToCoord(best_move.from) << "->" << chess_board.squareToCoord(best_move.to) << std::endl;
-    /*
-    std::vector<Move> expected_moves = {
-            {chess_board.coordToSquare("d5"), chess_board.coordToSquare("c4")},
-            {chess_board.coordToSquare("c7"), chess_board.coordToSquare("c6")}
-    };
+    //std::cout << chess_board.squareToCoord(best_move.from) << "->" << chess_board.squareToCoord(best_move.to) << std::endl;
 
-    EXPECT_TRUE(std::find(expected_moves.begin(), expected_moves.end(), best_move) != expected_moves.end());
-     */
+    Move illigal_move = {chess_board.coordToSquare("f5"), chess_board.coordToSquare("g6")};
+    EXPECT_NE(best_move, illigal_move);
 }
 

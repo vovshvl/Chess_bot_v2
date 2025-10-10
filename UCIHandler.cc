@@ -21,12 +21,14 @@ void UCIHandler::handleCommand(const std::string& cmd) {
         std::cout << "readyok" << std::endl;
     }
     else if (cmd.rfind("position", 0) == 0) {
-        std::cout << "Before setting position, side to move = "
-                  << (chess_board.white_to_move ? "White" : "Black") << std::endl;
+        //std::cout << "Before setting position, side to move = "
+                  //<< (chess_board.white_to_move ? "White" : "Black") << std::endl;
         cmdPosition(cmd);
+        /*
         std::cout << "After setting position, side to move = "
                   << (chess_board.white_to_move ? "White" : "Black") << std::endl;
         chess_board.print_board();
+         */
     }
     else if (cmd.rfind("go", 0) == 0) {
         cmdGo(cmd);
