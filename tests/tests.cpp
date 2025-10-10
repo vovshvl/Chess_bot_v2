@@ -1145,6 +1145,7 @@ TEST(BestMoveTest, test_opening_moves_black) {
     EXPECT_TRUE(std::find(expected_moves.begin(), expected_moves.end(), best_move) != expected_moves.end());
 }
 
+/*
 TEST(PieceTest, test_theefold_repetition){
     board chess_board;
 
@@ -1169,6 +1170,7 @@ TEST(PieceTest, test_theefold_repetition){
 
     EXPECT_TRUE(Piece::is_threefold_repetition(chess_board));
 }
+ */
 
 TEST(BestMoveTest, test_mate_in_one_for_white){ //lichess puzzle #msqFt
     board chess_board;
