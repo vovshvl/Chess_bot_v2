@@ -39,6 +39,10 @@ void UCIHandler::handleCommand(const std::string& cmd) {
     else if (cmd == "quit") {
         exit(0);
     }
+    else if(cmd == "score"){
+        std::cout << eval.evaluate(chess_board, chess_board.white_to_move) << std::endl;
+        chess_board.print_board();
+    }
 }
 
 void UCIHandler::cmdPosition(const std::string& cmd) {

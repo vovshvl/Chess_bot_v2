@@ -409,7 +409,7 @@ public:
         int score = evaluate_material(b);
         score += evaluate_pst(b, endgame);
         score += evaluate_piece_bonuses(b);
-        score += evaluate_king_safety(b, endgame);
+        //score += evaluate_king_safety(b, endgame);
         score += evaluate_central_control(b);
 
         if (!endgame) {
