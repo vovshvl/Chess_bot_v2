@@ -9,7 +9,6 @@ add_executable(chess_bot_new
         Evaluator.cc
         main.cc
         Move.cc
-        ChessGameDemo.hh
         BestMove.hh
         tests/MinmaxBenchmark.cc
         tests/Game.cc
@@ -38,7 +37,6 @@ add_executable(chessbot_tests
         Evaluator.cc
         board.cc
         Move.cc
-        ChessGameDemo.cc
         Zobrist.hh
         Zobrist.cc
         OpeningBook.hh

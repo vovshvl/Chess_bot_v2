@@ -2,6 +2,7 @@
 ### Important notes
 1. Board is enumerated from a1(0) to h8(63) with b1(1) being the second element.
 2. Castling works like normal kings legal move and moving the rook is handled in execute_move
+3. 
 
 ### List to Do
 1) Write tests ⚠️
@@ -23,3 +24,4 @@
     -  python3 lichess-bot.py --config config.yaml
     -  g++ -O2 -std=c++17 main.cc UCIHandler.cc board.cc Evaluator.cc Move.cc OpeningBook.cc Piece.cc Zobrist.cc -o BOT_KS
     -  position startpos moves
+16) Find out why blunders are made half during the game.
