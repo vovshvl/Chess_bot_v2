@@ -27,18 +27,18 @@ int Zobrist::castling_rights_index_zobrist(bool wk, bool wq, bool bk, bool bq) {
 
 int Zobrist::get_value_by_piece_zobrist( const char piece) {
     switch (piece) {
-        case 'P': return 1;
-        case 'p': return 2;
-        case 'N': return 3;
-        case 'n': return 4;
-        case 'B': return 5;
-        case 'b': return 6;
-        case 'R': return 7;
-        case 'r': return 8;
-        case 'Q': return 9;
-        case 'q': return 10;
-        case 'K': return 11;
-        case 'k': return 12;
+        case 'P': return 0;
+        case 'p': return 1;
+        case 'N': return 2;
+        case 'n': return 3;
+        case 'B': return 4;
+        case 'b': return 5;
+        case 'R': return 6;
+        case 'r': return 7;
+        case 'Q': return 8;
+        case 'q': return 9;
+        case 'K': return 10;
+        case 'k': return 11;
         default: return -1;
 
     }
