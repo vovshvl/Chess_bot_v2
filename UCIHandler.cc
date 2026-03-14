@@ -35,6 +35,7 @@ void UCIHandler::handleCommand(const std::string& cmd) {
     }
     else if (cmd == "ucinewgame") {
         chess_board.init_board();
+        tt.clear(); // reset transposition table between games
     }
     else if (cmd == "quit") {
         exit(0);
@@ -54,9 +55,13 @@ void UCIHandler::cmdPosition(const std::string& cmd) {
     if (token == "startpos") {
         chess_board.init_board();
     } else if (token == "fen") {
-        std::string fen;
-        std::getline(iss, fen);
-        //chess_board.loadFEN(fen); //Need to do FEN
+        // Read exactly 6 FEN fields so "moves" section remains in stream
+        std::string parts[6];
+        int count = 0;
+        while (count < 6 && iss >> parts[count]) count++;
+        std::string fen = parts[0];
+        for (int i = 1; i < count; i++) fen += " " + parts[i];
+        chess_board.loadFEN(fen);
     }
     if (iss >> token && token == "moves") {
         std::string move;
