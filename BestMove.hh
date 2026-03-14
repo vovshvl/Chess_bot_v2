@@ -40,8 +40,13 @@ public:
     TTEntry* probe(const board& b) {
         size_t idx = get_index(b.zobrist_key);
         TTEntry& entry = table[idx];
-        if (entry.best_move.from == -1) return nullptr; // empty slot
+        if (entry.best_move.from == -1) return nullptr;        // empty slot
+        if (entry.zobrist_key != b.zobrist_key) return nullptr; // hash collision
         return &entry;
+    }
+
+    void clear() {
+        std::fill(table.begin(), table.end(), TTEntry{0, 0, 0, 0, {-1, -1}});
     }
 };
 
@@ -191,10 +196,8 @@ public:
                 best_move_in_this_node = move; // track the best move
             }
 
-
-            //alpzha beta prunning
-            if (score > best_score) best_score = score;
-            alpha = std::max(alpha, score);
+            // alpha-beta pruning
+            alpha = std::max(alpha, best_score);
             if (alpha >= beta) break;
         }
         int flag;
@@ -297,10 +300,8 @@ public:
                 best_move_in_this_node = move; // track the best move
             }
 
-
-            //alpzha beta prunning
-            if (score > best_score) best_score = score;
-            alpha = std::max(alpha, score);
+            // alpha-beta pruning
+            alpha = std::max(alpha, best_score);
             if (alpha >= beta) break;
         }
         int flag;
